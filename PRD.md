@@ -2,92 +2,135 @@
 
 ## 1. 目的・背景
 
-- **目的**：学習記録アプリのバックエンドを整備し、フロントと連携して学習データの保存・取得、AIプラン生成、育成ゲーム機能を提供
+- **目的**：学習記録アプリのAI機能を提供するマイクロサービスとして、学習プラン生成・分析機能を実装
 - **背景**：
   - Next.js/PandaCSSでフロント設計済み
-  - Python+FastAPIでビジネスロジックを実装予定
-  - SupabaseをDB＆Auth基盤として利用
+  - Supabaseで学習記録CRUD・認証・ゲーム機能を実装済み
+  - Python+FastAPIでAI関連機能のみを実装予定
 
 ## 2. 想定ユーザー
 
-- 学習記録アプリの最終ユーザー（学生・社会人）
-- フロント開発チーム／QAエンジニア
+- 学習記録アプリのフロントエンド（Next.js）
+- Supabaseから学習データを取得してAI分析を依頼するシステム
 
 ## 3. 課題
 
-- フロントからのデータ登録・取得APIが未定義
-- 安全かつスケーラブルなAIプラン生成APIが必要
-- Supabase Auth／RLSを組み込んだ堅牢な認証・権限管理が必須
+- 学習データを基にした効果的な学習プラン生成が必要
+- 学習進捗の分析・アドバイス機能が不足
+- AI機能のスケーラブルなAPI提供が必要
 
 ## 4. 解決策
 
-- FastAPIでRESTfulエンドポイントを実装
-- Supabase AuthでJWT認証＋Row-Level Security
-- AIプランをモジュール化しAPI経由で提供
-- 育成ゲーム機能用の専用エンドポイント群を用意
+- FastAPIでAI専用のRESTfulエンドポイントを実装
+- LLM（Gemini 2.0 Flash-Lite無料枠）を活用した学習プラン生成
+- 学習データ分析・進捗アドバイス機能の提供
+- 今日のTODOリスト自動生成機能の提供
+- Supabaseとの連携による学習履歴の取得・分析
 
 ## 5. 機能要件
 
 | 機能                 | Must (PoC)                                 | Nice-to-have                       |
 |:--------------------|:-------------------------------------------|:-----------------------------------|
-| 学習記録CRUD        | POST/GET/PUT/DELETE `/api/records`        | バルクインポート、タグ管理        |
-| 学習履歴サマリー    | GET `/api/records/summary?period=daily`   | week/month フィルター              |
-| AIプラン生成        | POST `/api/plan` → JSON返却              | プラン編集履歴、有効期限管理      |
-| ペットステータス更新| GET/POST `/api/game/status`, `/api/game/feed` | ranking、マルチセッション管理      |
+| 学習プラン生成      | POST `/api/ai/plan` → JSON返却           | プラン編集履歴、複数パターン生成   |
+| 今日のTODO提案      | POST `/api/ai/todo` → TODOリスト返却     | 優先度付け、時間見積もり          |
+| 学習進捗分析        | POST `/api/ai/analysis` → 分析結果返却   | 詳細な弱点分析、改善提案          |
+| 学習アドバイス      | POST `/api/ai/advice` → アドバイス返却   | パーソナライズ、学習スタイル分析   |
+| 学習目標設定支援    | POST `/api/ai/goals` → 目標提案返却      | SMART目標、達成度予測             |
 
 ## 6. 非機能要件
 
-- **パフォーマンス**：各API応答 ≤ 200ms
-- **認証**：Supabase JWT（自動リフレッシュ）
+- **パフォーマンス**：各AI API応答 ≤ 5秒（LLM処理時間含む）
+- **認証**：API キー認証（Supabaseからの呼び出し専用）
 - **セキュリティ**：
-  - CORS制限＋JWTでCSRF不要
-  - Supabase RLSでテーブル単位アクセス制御
+  - CORS制限＋API Key認証
+  - レート制限（1分間100リクエスト）
 - **テスト**：Pytest＋HTTPX でユニット／統合テスト
 
 ## 7. KPI／検証指標
 
-- APIエラー率 ≤ 1%
-- プラン生成API平均応答 ≤ 300ms
+- AIプラン生成API平均応答 ≤ 5秒
+- AI分析API精度 ≥ 85%（ユーザー満足度）
 - テストカバレッジ ≥ 80%
 
 ## 8. API設計例
-POST   /api/auth/signup    # ユーザー登録
-POST   /api/auth/signin    # ログイン
-GET    /api/records        # 取得
-POST   /api/records        # 登録
-GET    /api/records/:id    # 詳細
-PUT    /api/records/:id    # 更新
-DELETE /api/records/:id    # 削除
-GET    /api/records/summary?period={daily,weekly,monthly}
-POST   /api/plan           # AIプラン生成
-GET    /api/game/status    # ステータス取得
-POST   /api/game/feed      # 餌をあげる
+POST   /api/ai/plan        # 学習プラン生成
+POST   /api/ai/todo        # 今日のTODOリスト提案
+POST   /api/ai/analysis    # 学習進捗分析
+POST   /api/ai/advice      # 学習アドバイス
+POST   /api/ai/goals       # 学習目標設定支援
+GET    /api/health         # ヘルスチェック
 
 
-## 9. データモデル (Supabase テーブル)
+## 9. データ連携 (Supabaseとの協調)
 
-| テーブル名    | 主なカラム                               | RLSポリシー                          |
-|:-------------|:------------------------------------------|:-------------------------------------|
-| users        | id, email, created_at                    | 自身のレコードのみ読取/更新可       |
-| records      | id, user_id, subject, duration, memo, created_at | user_id一致時のみ操作許可    |
-| plans        | id, user_id, plan_date, content, created_at     | 同上                              |
-| game_status  | id, user_id, hunger, happiness, updated_at      | 同上                              |
+| データソース      | 取得方法                                 | 用途                                |
+|:-----------------|:-----------------------------------------|:------------------------------------|
+| records (学習記録)| Supabase REST API経由で取得             | プラン生成・進捗分析の基礎データ    |
+| users (ユーザー情報)| 必要に応じてSupabase APIから取得      | パーソナライズ分析                 |
+| 生成結果         | FastAPI内で処理・Supabaseに保存しない | フロントに直接返却                  |
+
+**注意**: FastAPIはAI処理に特化し、データの永続化はSupabaseに委譲
 
 ## 10. 技術スタック
 
-- **バックエンド**：Python 3.10+, FastAPI
-- **DB/Auth**：Supabase (PostgreSQL + Auth + RLS)
-- **デプロイ**：Vercel (Edge Functions) or Railway
+- **AI機能**：Python 3.10+, FastAPI
+- **LLM**：Google Gemini 2.0 Flash-Lite（無料枠）
+- **外部連携**：Supabase REST API（学習データ取得）
+- **デプロイ**：Railway / Google Cloud Run
 - **CI/CD**：GitHub Actions (Lint → テスト → デプロイ)
 
 ## 11. 開発スケジュール
 
 | Day | タスク                                                        |
 |:----|:-------------------------------------------------------------|
-| 1   | リポジトリ初期化、FastAPI＋Supabase連携設定、DBマイグレーション |
-| 2   | 認証API実装＆テスト                                           |
-| 3   | 学習記録CRUD実装＆テスト                                       |
-| 4   | サマリーAPI＆ステータス取得API実装                            |
-| 5   | AIプラン生成エンドポイント＆LLM連携                          |
-| 6   | 餌機能・ステータス更新API実装                                |
-| 7   | 統合テスト・ドキュメント整備 → フロント連携確認 → デプロイ準備 |
+| 1   | リポジトリ初期化、FastAPI基盤構築、Gemini API連携設定         |
+| 2   | Supabase連携設定＆学習データ取得API実装                       |
+| 3   | 学習プラン生成API実装＆テスト                                 |
+| 4   | 今日のTODOリスト提案API実装＆テスト                          |
+| 5   | 学習進捗分析API＆アドバイスAPI実装                           |
+| 6   | 学習目標設定支援API実装＆統合テスト                          |
+| 7   | エラーハンドリング強化・ドキュメント整備・デプロイ           |
+
+## 12. 今日のTODO提案機能 詳細仕様
+
+### 入力データ
+- 学習履歴（過去1週間〜1ヶ月）
+- 学習目標・計画
+- 現在の曜日・時間
+- ユーザーの学習スタイル設定（もしあれば）
+
+### 出力形式
+```json
+{
+  "date": "2025-07-12",
+  "todos": [
+    {
+      "id": 1,
+      "title": "数学 - 微分の復習",
+      "description": "昨日の理解度が70%だったので復習推奨",
+      "priority": "high",
+      "estimated_time": 30,
+      "category": "復習",
+      "reason": "理解度向上のため"
+    },
+    {
+      "id": 2,
+      "title": "英語 - 新単語学習",
+      "description": "週間目標達成のため20個の新単語",
+      "priority": "medium",
+      "estimated_time": 20,
+      "category": "新規学習",
+      "reason": "週間目標達成のため"
+    }
+  ],
+  "total_estimated_time": 50,
+  "motivational_message": "今日も頑張りましょう！昨日より少し進歩すれば十分です。"
+}
+```
+
+### AI判断ロジック
+1. **継続性重視**: 前日の学習を踏まえた連続性
+2. **弱点補強**: 理解度の低い分野を優先
+3. **目標達成**: 設定した週間・月間目標への進捗
+4. **バランス**: 複数科目のバランス良い配分
+5. **現実的な時間配分**: ユーザーの平均学習時間を考慮
