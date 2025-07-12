@@ -1,1 +1,1 @@
-# This file makes services a Python package
+"""Business logic services package initialization."""

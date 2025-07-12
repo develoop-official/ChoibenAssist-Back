@@ -1,11 +1,14 @@
+"""ChoibenAssist FastAPI Backend - AI Microservice"""
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
-from app.config import settings
-from app.routers import ai, health
-from app.services.gemini_service import GeminiService
+# Updated import path
+from app.core.config import settings
+# Comment out imports that require additional packages for now
+# from app.routers import ai, health
+# from app.services.gemini_service import GeminiService
 
 
 # Configure logging
@@ -19,14 +22,14 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting ChoibenAssist AI Backend...")
     
-    # Initialize Gemini service
-    try:
-        gemini_service = GeminiService()
-        app.state.gemini_service = gemini_service
-        logger.info("Gemini service initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to initialize Gemini service: {e}")
-        raise
+    # Initialize services later when packages are installed
+    # try:
+    #     gemini_service = GeminiService()
+    #     app.state.gemini_service = gemini_service
+    #     logger.info("Gemini service initialized successfully")
+    # except Exception as e:
+    #     logger.error(f"Failed to initialize Gemini service: {e}")
+    #     raise
     
     yield
     
@@ -53,9 +56,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(health.router, prefix="/api", tags=["Health"])
-app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
+# Include routers (will add later)
+# app.include_router(health.router, prefix="/api", tags=["Health"])
+# app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
 
 
 @app.get("/")
@@ -65,4 +68,14 @@ async def root():
         "message": "ChoibenAssist AI Backend", 
         "version": "1.0.0",
         "status": "running"
+    }
+
+
+@app.get("/api/health")
+async def health_check():
+    """Basic health check endpoint"""
+    return {
+        "status": "healthy",
+        "service": "ChoibenAssist AI Backend",
+        "environment": settings.environment
     }
