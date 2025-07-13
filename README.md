@@ -1,182 +1,720 @@
 # ChoibenAssist AI Backend
 
+[![Python](https://img.shields.io/badge/Python-3.12+-blue?style=flat-square&logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](#license)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/psf/black)
+
 学習記録アプリのAI機能を提供するマイクロサービス
 
-## 🚀 Features
+## Table of Contents
 
-- **学習プラン生成**: 個人の学習履歴に基づいたカスタマイズされたプラン
-- **今日のTODO提案**: 日々の効果的な学習タスクの自動生成
-- **学習進捗分析**: データに基づいた進捗分析と改善提案
-- **学習アドバイス**: パーソナライズされた学習指導
-- **目標設定支援**: SMART目標の提案とトラッキング
+- [概要](#概要)
+- [機能](#機能)
+- [技術スタック](#技術スタック)
+- [プロジェクト構造](#プロジェクト構造)
+- [セットアップ](#セットアップ)
+- [API エンドポイント](#api-エンドポイント)
+- [開発](#開発)
+- [テスト](#テスト)
+- [デプロイメント](#デプロイメント)
+- [コントリビューション](#コントリビューション)
 
-## 🛠 Tech Stack
+## 概要
 
-- **Backend**: Python 3.10+, FastAPI
+ChoibenAssist AI BackendはFastAPIで構築されたマイクロサービスで、学習記録アプリにAI機能を提供します。Google Gemini 2.0 Flash-Liteを活用し、個人化された学習プラン生成、進捗分析、学習アドバイスを提供します。
+
+### 主な特徴
+
+- 🤖 **AI駆動**: Google Gemini 2.0 Flash-Liteによる高品質なAI応答
+- 🚀 **高パフォーマンス**: FastAPIによる非同期処理
+- 🔒 **セキュア**: API キー認証とレート制限
+- 📊 **データ連携**: Supabaseとのシームレスな統合
+- 🧪 **テスト済み**: 包括的なテストスイート
+
+## 機能
+
+| 機能 | エンドポイント | 説明 |
+|-----|-------------|------|
+| **学習プラン生成** | `POST /api/ai/plan` | 個人の学習履歴に基づいたカスタマイズされたプラン |
+| **今日のTODO提案** | `POST /api/ai/todo` | 日々の効果的な学習タスクの自動生成 |
+| **学習進捗分析** | `POST /api/ai/analysis` | データに基づいた進捗分析と改善提案 |
+| **学習アドバイス** | `POST /api/ai/advice` | パーソナライズされた学習指導 |
+| **目標設定支援** | `POST /api/ai/goals` | SMART目標の提案とトラッキング |
+
+## 技術スタック
+
+### コア技術
+- **Runtime**: Python 3.12+
+- **Web Framework**: FastAPI 0.104+
+- **ASGI Server**: Uvicorn
 - **AI/LLM**: Google Gemini 2.0 Flash-Lite
-- **External API**: Supabase REST API
-- **Testing**: Pytest
-- **Development**: Black, Flake8, MyPy
 
-## 📁 Project Structure
+### データ & 外部連携
+- **External API**: Supabase REST API
+- **Data Validation**: Pydantic 2.5+
+- **Environment**: python-dotenv
+
+### 開発・テスト
+- **Testing**: Pytest + HTTPX
+- **Code Quality**: Black, isort, Flake8, MyPy
+- **Documentation**: Swagger UI (FastAPI自動生成)
+
+## プロジェクト構造
 
 ```
 ChoibenAssist-Back/
-├── app/
-│   ├── __init__.py
-│   ├── main.py                 # FastAPI application
-│   ├── config.py               # Settings and configuration
-│   ├── dependencies.py         # Authentication and rate limiting
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── ai_models.py        # Pydantic models
-│   ├── routers/
-│   │   ├── __init__.py
-│   │   ├── ai.py               # AI endpoints
-│   │   └── health.py           # Health check endpoints
-│   └── services/
-│       ├── __init__.py
-│       ├── gemini_service.py   # Gemini AI integration
-│       └── supabase_service.py # Supabase data fetching
-├── tests/
-│   ├── __init__.py
-│   └── test_main.py            # Basic tests
-├── requirements.txt            # Python dependencies
-├── .env.example               # Environment variables template
-├── .gitignore
-├── run.py                     # Development server
-└── README.md
+├── 📁 app/                              # メインアプリケーション
+│   ├── 📄 __init__.py
+│   ├── 📄 main.py                       # FastAPIアプリケーションエントリーポイント
+│   │
+│   ├── 📁 api/                          # API層 - エンドポイント定義
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 deps.py                   # API依存関係
+│   │   └── 📁 v1/                       # APIバージョン管理
+│   │       ├── 📄 __init__.py
+│   │       ├── 📄 api.py                # APIルーター統合
+│   │       └── 📁 endpoints/            # 個別エンドポイント
+│   │           ├── 📄 __init__.py
+│   │           ├── 📄 ai.py             # AI機能エンドポイント
+│   │           └── 📄 health.py         # ヘルスチェック
+│   │
+│   ├── 📁 core/                         # コア機能 - アプリケーション基盤
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 config.py                 # 設定管理
+│   │   ├── 📄 security.py               # セキュリティ機能
+│   │   ├── 📄 logging.py                # ログ設定
+│   │   └── 📄 exceptions.py             # カスタム例外
+│   │
+│   ├── 📁 models/                       # データモデル - ドメインモデル
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 ai_models.py              # AI機能のPydanticモデル
+│   │   └── 📄 base.py                   # 基底モデル
+│   │
+│   ├── 📁 schemas/                      # スキーマ - API入出力
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 ai_schemas.py             # AI機能関連スキーマ
+│   │   ├── 📄 requests.py               # リクエストスキーマ
+│   │   ├── 📄 responses.py              # レスポンススキーマ
+│   │   └── 📄 enums.py                  # 列挙型定義
+│   │
+│   ├── 📁 services/                     # ビジネスロジック層
+│   │   ├── 📄 __init__.py
+│   │   ├── 📁 ai/                       # AI機能専用サービス
+│   │   │   ├── 📄 __init__.py
+│   │   │   ├── 📄 plan_generator.py     # 学習プラン生成
+│   │   │   ├── 📄 todo_generator.py     # TODO生成
+│   │   │   ├── 📄 analyzer.py           # 学習分析
+│   │   │   └── 📄 advisor.py            # アドバイス生成
+│   │   │
+│   │   └── 📁 external/                 # 外部サービス連携
+│   │       ├── 📄 __init__.py
+│   │       ├── 📄 gemini_client.py      # Gemini APIクライアント
+│   │       └── 📄 supabase_client.py    # Supabase APIクライアント
+│   │
+│   └── 📁 utils/                        # ユーティリティ
+│       ├── 📄 __init__.py
+│       ├── 📄 helpers.py                # 汎用ヘルパー関数
+│       └── 📄 validators.py             # バリデーション機能
+│
+├── 📁 tests/                            # テスト
+│   ├── 📄 __init__.py
+│   ├── 📄 conftest.py                   # pytest設定
+│   ├── 📄 test_main.py                  # メインアプリケーションテスト
+│   ├── 📁 api/                          # APIテスト
+│   └── 📁 services/                     # サービス層テスト
+│
+├── 📁 docs/                             # ドキュメント
+│   ├── 📄 class_diagram.md              # システム設計図
+│   ├── 📄 SOW.md                        # 作業範囲書
+│   └── 📄 directory_structure.md        # ディレクトリ構造説明
+│
+├── 📁 scripts/                          # 運用スクリプト
+│   └── 📄 start.py                      # 開発サーバー起動
+│
+├── 📄 .env.example                      # 環境変数テンプレート
+├── 📄 .gitignore                        # Git無視ファイル
+├── 📄 requirements.txt                  # Python依存関係
+├── 📄 requirements-dev.txt              # 開発用依存関係
+├── 📄 run.py                            # 開発サーバー起動スクリプト
+├── 📄 PRD.md                            # プロダクト要求仕様
+└── 📄 README.md                         # プロジェクト説明
 ```
 
-## 🔧 Setup
+### 設計原則
 
-### 1. Environment Setup
+#### 1. **レイヤードアーキテクチャ**
+```
+API層 → サービス層 → モデル層
+  ↓        ↓         ↓
+エンドポイント → ビジネスロジック → データ構造
+```
+
+#### 2. **責務の分離**
+- **API層**: HTTPリクエスト/レスポンス処理
+- **サービス層**: ビジネスロジックとAI機能
+- **モデル層**: データ構造とバリデーション
+- **コア層**: 横断的関心事（設定、セキュリティ、ログ）
+
+#### 3. **依存関係の方向**
+- 外側から内側への依存のみ
+- コア機能は外部ライブラリに依存しない
+- 依存関係注入によるテスタビリティ向上
+
+## セットアップ
+
+### 前提条件
+
+- Python 3.12+ がインストールされていること
+- Git がインストールされていること
+- Google Gemini API キーを取得済みであること
+- Supabase プロジェクトが作成済みであること
+
+### 1. プロジェクトのクローン
 
 ```bash
-# Create virtual environment
-python -m venv venv
+git clone https://github.com/develoop-official/ChoibenAssist-Back.git
+cd ChoibenAssist-Back
+```
 
-# Activate virtual environment
-# Windows
-venv\Scripts\activate
+### 2. 仮想環境の作成と有効化
+
+```bash
+# 仮想環境の作成
+python -m venv .venv
+
+# 仮想環境の有効化
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+# Windows (Command Prompt)
+.venv\Scripts\activate
 # macOS/Linux
-source venv/bin/activate
+source .venv/bin/activate
+```
 
-# Install dependencies
+### 3. 依存関係のインストール
+
+```bash
+# 本番用依存関係
 pip install -r requirements.txt
+
+# 開発用依存関係（オプション）
+pip install -r requirements-dev.txt
 ```
 
-### 2. Environment Variables
-
-Copy `.env.example` to `.env` and fill in your values:
+### 4. 環境変数の設定
 
 ```bash
+# 環境変数ファイルをコピー
 cp .env.example .env
+
+# .envファイルを編集
+# Windows
+notepad .env
+# macOS/Linux
+nano .env
 ```
 
-Required environment variables:
-- `GEMINI_API_KEY`: Your Google Gemini API key
-- `SUPABASE_URL`: Your Supabase project URL
-- `SUPABASE_ANON_KEY`: Your Supabase anonymous key
-- `API_SECRET_KEY`: Secret key for API authentication
+#### 必須環境変数
 
-### 3. Run Development Server
+```env
+# AI/LLM設定
+GEMINI_API_KEY=your_google_gemini_api_key_here
+
+# Supabase設定
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_supabase_anonymous_key_here
+
+# API設定
+API_SECRET_KEY=your_strong_secret_key_here
+
+# アプリケーション設定
+DEBUG=True
+ENVIRONMENT=development
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
+# レート制限
+RATE_LIMIT_PER_MINUTE=100
+```
+
+### 5. 開発サーバーの起動
 
 ```bash
-# Using run.py
+# 推奨方法: run.pyスクリプトを使用
 python run.py
 
-# Or directly with uvicorn
-uvicorn app.main:app --reload
+# 代替方法: uvicornを直接使用
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The API will be available at `http://localhost:8000`
+### 6. 動作確認
 
-## 📡 API Endpoints
+サーバーが起動したら、以下のURLでアクセス確認：
 
-### Health Check
-- `GET /api/health` - Basic health check
-- `GET /api/health/detailed` - Detailed health check with dependencies
+- **API ルート**: http://127.0.0.1:8000
+- **ヘルスチェック**: http://127.0.0.1:8000/api/health
+- **API ドキュメント**: http://127.0.0.1:8000/docs
+- **ReDoc**: http://127.0.0.1:8000/redoc
 
-### AI Services
-All AI endpoints require `Authorization: Bearer {API_SECRET_KEY}` header.
+## Supabase データベース設計
 
-- `POST /api/ai/plan` - Generate learning plan
-- `POST /api/ai/todo` - Generate daily TODO list
-- `POST /api/ai/analysis` - Analyze learning progress
-- `POST /api/ai/advice` - Get learning advice
-- `POST /api/ai/goals` - Suggest learning goals
+このAPIを使用するために必要なSupabaseのテーブル構造です。
 
-### API Documentation
-- Swagger UI: `http://localhost:8000/docs` (development only)
-- ReDoc: `http://localhost:8000/redoc` (development only)
+### 認証・ユーザー管理
 
-## 🧪 Testing
+#### `profiles` テーブル（ユーザープロファイル拡張）
+| カラム名 | 型 | 説明 | 制約 |
+|---------|---|------|------|
+| `id` | UUID | ユーザーID | PRIMARY KEY, REFERENCES auth.users(id) |
+| `username` | TEXT | ユーザー名 | UNIQUE |
+| `full_name` | TEXT | フルネーム | |
+| `avatar_url` | TEXT | アバター画像URL | |
+| `learning_preferences` | JSONB | 学習設定 | DEFAULT '{}' |
+| `timezone` | TEXT | タイムゾーン | DEFAULT 'Asia/Tokyo' |
+| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
+| `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
+
+#### `api_keys` テーブル（API認証）
+| カラム名 | 型 | 説明 | 制約 |
+|---------|---|------|------|
+| `id` | UUID | API キー ID | PRIMARY KEY |
+| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
+| `api_key` | TEXT | APIキー文字列 | UNIQUE, NOT NULL |
+| `name` | TEXT | キー名 | DEFAULT 'Default API Key' |
+| `is_active` | BOOLEAN | 有効フラグ | DEFAULT TRUE |
+| `expires_at` | TIMESTAMP | 有効期限 | |
+| `last_used_at` | TIMESTAMP | 最終使用日時 | |
+| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
+
+### 学習データ管理
+
+#### `subjects` テーブル（学習科目）
+| カラム名 | 型 | 説明 | 制約 |
+|---------|---|------|------|
+| `id` | UUID | 科目ID | PRIMARY KEY |
+| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
+| `name` | TEXT | 科目名 | NOT NULL |
+| `description` | TEXT | 説明 | |
+| `color` | TEXT | 表示色 | DEFAULT '#3B82F6' |
+| `is_active` | BOOLEAN | 有効フラグ | DEFAULT TRUE |
+| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
+| `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
+
+#### `learning_records` テーブル（学習記録）
+| カラム名 | 型 | 説明 | 制約 |
+|---------|---|------|------|
+| `id` | UUID | 記録ID | PRIMARY KEY |
+| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
+| `subject_id` | UUID | 科目ID | REFERENCES subjects(id) |
+| `date` | DATE | 学習日 | NOT NULL |
+| `duration_minutes` | INTEGER | 学習時間（分） | NOT NULL, > 0 |
+| `score` | INTEGER | スコア | 0-100 |
+| `difficulty` | TEXT | 難易度 | 'easy', 'medium', 'hard' |
+| `notes` | TEXT | メモ | |
+| `tags` | TEXT[] | タグ | DEFAULT '{}' |
+| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
+| `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
+
+### AI生成データ
+
+#### `learning_plans` テーブル（学習プラン）
+| カラム名 | 型 | 説明 | 制約 |
+|---------|---|------|------|
+| `id` | UUID | プランID | PRIMARY KEY |
+| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
+| `title` | TEXT | プラン名 | NOT NULL |
+| `description` | TEXT | 説明 | |
+| `goal` | TEXT | 学習目標 | NOT NULL |
+| `difficulty` | TEXT | 難易度 | 'easy', 'medium', 'hard' |
+| `estimated_duration_minutes` | INTEGER | 予想所要時間 | |
+| `plan_data` | JSONB | AI生成プラン詳細 | NOT NULL |
+| `status` | TEXT | ステータス | 'active', 'completed', 'paused' |
+| `start_date` | DATE | 開始日 | |
+| `end_date` | DATE | 終了日 | |
+| `created_by_ai` | BOOLEAN | AI生成フラグ | DEFAULT TRUE |
+| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
+| `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
+
+#### `daily_todos` テーブル（日次TODO）
+| カラム名 | 型 | 説明 | 制約 |
+|---------|---|------|------|
+| `id` | UUID | TODO ID | PRIMARY KEY |
+| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
+| `date` | DATE | 対象日 | NOT NULL |
+| `todos` | JSONB | AI生成TODOリスト | NOT NULL |
+| `completed_todos` | JSONB | 完了TODO | DEFAULT '[]' |
+| `total_estimated_minutes` | INTEGER | 予想総時間 | |
+| `actual_minutes` | INTEGER | 実際の時間 | DEFAULT 0 |
+| `completion_rate` | DECIMAL(5,2) | 完了率 | DEFAULT 0.0 |
+| `created_by_ai` | BOOLEAN | AI生成フラグ | DEFAULT TRUE |
+| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
+| `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
+
+#### `ai_analyses` テーブル（AI分析結果）
+| カラム名 | 型 | 説明 | 制約 |
+|---------|---|------|------|
+| `id` | UUID | 分析ID | PRIMARY KEY |
+| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
+| `analysis_type` | TEXT | 分析タイプ | 'progress', 'advice', 'goals' |
+| `input_data` | JSONB | 入力データ | NOT NULL |
+| `result_data` | JSONB | AI分析結果 | NOT NULL |
+| `period_start` | DATE | 分析期間開始 | |
+| `period_end` | DATE | 分析期間終了 | |
+| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
+
+#### `learning_goals` テーブル（学習目標）
+| カラム名 | 型 | 説明 | 制約 |
+|---------|---|------|------|
+| `id` | UUID | 目標ID | PRIMARY KEY |
+| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
+| `subject_id` | UUID | 科目ID | REFERENCES subjects(id) |
+| `title` | TEXT | 目標名 | NOT NULL |
+| `description` | TEXT | 説明 | |
+| `target_value` | DECIMAL(10,2) | 目標値 | |
+| `current_value` | DECIMAL(10,2) | 現在値 | DEFAULT 0 |
+| `unit` | TEXT | 単位 | 'hours', 'points', 'chapters' |
+| `target_date` | DATE | 目標達成日 | |
+| `status` | TEXT | ステータス | 'active', 'completed', 'paused', 'cancelled' |
+| `priority` | INTEGER | 優先度 | 1-5 |
+| `created_by_ai` | BOOLEAN | AI生成フラグ | DEFAULT FALSE |
+| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
+| `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
+
+### 使用状況追跡
+
+#### `api_usage_logs` テーブル（API使用ログ）
+| カラム名 | 型 | 説明 | 制約 |
+|---------|---|------|------|
+| `id` | UUID | ログID | PRIMARY KEY |
+| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
+| `api_key_id` | UUID | APIキーID | REFERENCES api_keys(id) |
+| `endpoint` | TEXT | エンドポイント | NOT NULL |
+| `method` | TEXT | HTTPメソッド | NOT NULL |
+| `status_code` | INTEGER | ステータスコード | NOT NULL |
+| `response_time_ms` | INTEGER | レスポンス時間（ms） | |
+| `request_size_bytes` | INTEGER | リクエストサイズ | |
+| `response_size_bytes` | INTEGER | レスポンスサイズ | |
+| `ip_address` | INET | IPアドレス | |
+| `user_agent` | TEXT | ユーザーエージェント | |
+| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
+
+### セキュリティ設定
+
+すべてのテーブルにRow Level Security (RLS)を設定し、ユーザーは自分のデータのみアクセス可能にします。
+
+### 必要なインデックス
+
+各テーブルに以下のインデックスを作成することを推奨：
+- `user_id`カラムへのインデックス
+- よく使用される検索条件（`date`, `status`, `is_active`など）
+- 複合インデックス（`user_id + date`など）
+
+## API エンドポイント
+
+### 認証
+
+すべてのAI関連エンドポイントには認証が必要です：
+
+```http
+Authorization: Bearer {API_SECRET_KEY}
+Content-Type: application/json
+```
+
+### ヘルスチェック
+
+| メソッド | エンドポイント | 説明 | 認証 |
+|---------|-------------|------|-----|
+| `GET` | `/api/health` | 基本ヘルスチェック | 不要 |
+| `GET` | `/api/health/detailed` | 詳細ヘルスチェック | 不要 |
+
+### AI サービス
+
+| メソッド | エンドポイント | 説明 | 認証 |
+|---------|-------------|------|-----|
+| `POST` | `/api/ai/plan/{user_id}` | 学習プラン生成 | 必要 |
+| `POST` | `/api/ai/todo/{user_id}` | 今日のTODOリスト生成 | 必要 |
+| `POST` | `/api/ai/analysis/{user_id}` | 学習進捗分析 | 必要 |
+| `POST` | `/api/ai/advice/{user_id}` | 学習アドバイス | 必要 |
+| `POST` | `/api/ai/goals/{user_id}` | 学習目標設定支援 | 必要 |
+
+### リクエスト例
+
+#### 学習プラン生成
 
 ```bash
-# Run all tests
+curl -X POST "http://127.0.0.1:8000/api/ai/plan/user123" \
+  -H "Authorization: Bearer your_api_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "goal": "数学の基礎を固める",
+    "time_available": 120,
+    "preferences": {
+      "focus_area": ["微分", "積分"],
+      "difficulty": "medium"
+    }
+  }'
+```
+
+#### 今日のTODO提案
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/ai/todo/user123?date=2025-07-14" \
+  -H "Authorization: Bearer your_api_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "time_available": 90,
+    "recent_progress": [
+      {"subject": "数学", "progress": 70},
+      {"subject": "英語", "progress": 50}
+    ]
+  }'
+```
+
+## 開発
+
+### 開発環境のセットアップ
+
+```bash
+# 開発用依存関係のインストール
+pip install -r requirements-dev.txt
+
+# pre-commit フックの設定（オプション）
+pre-commit install
+```
+
+### コード品質ツール
+
+```bash
+# コードフォーマット
+black app/ tests/
+isort app/ tests/
+
+# リント
+flake8 app/ tests/
+
+# 型チェック
+mypy app/
+
+# 全て一括実行
+python scripts/lint.py
+```
+
+### ホットリロード開発
+
+開発中は`run.py`を使用することで、ファイル変更時の自動リロードが有効になります：
+
+```bash
+python run.py
+```
+
+### デバッグ
+
+VS Codeでのデバッグ設定例（`.vscode/launch.json`）：
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FastAPI",
+            "type": "python",
+            "request": "launch",
+            "program": "run.py",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+    ]
+}
+```
+
+## テスト
+
+### テストの実行
+
+```bash
+# 全テスト実行
 pytest
 
-# Run with coverage
-pytest --cov=app
+# カバレッジ付きテスト
+pytest --cov=app --cov-report=html
 
-# Run specific test file
+# 特定のテストファイル
 pytest tests/test_main.py
+
+# 特定のテスト関数
+pytest tests/test_main.py::test_health_check
+
+# 詳細出力
+pytest -v
+
+# 失敗時のデバッグ情報
+pytest -vvv --tb=long
 ```
 
-## 🔐 Authentication
+### テストカバレッジ
 
-This API uses API key authentication for secure communication with the frontend/Supabase. Include the API key in the Authorization header:
+```bash
+# カバレッジレポートの生成
+pytest --cov=app --cov-report=html --cov-report=term
 
+# カバレッジレポートの確認
+open htmlcov/index.html  # macOS
+start htmlcov/index.html # Windows
 ```
-Authorization: Bearer your_api_secret_key
+
+### テスト環境の設定
+
+テスト用の環境変数は`tests/conftest.py`で管理：
+
+```python
+# テスト用の設定オーバーライド
+@pytest.fixture
+def test_settings():
+    return Settings(
+        environment="testing",
+        debug=False,
+        gemini_api_key="test_key"
+    )
 ```
 
-## 📊 Rate Limiting
-
-- Default: 100 requests per minute per IP
-- Configurable via `RATE_LIMIT_PER_MINUTE` environment variable
-
-## 🚀 Deployment
+## デプロイメント
 
 ### Railway
 
-1. Connect your GitHub repository to Railway
-2. Set environment variables in Railway dashboard
-3. Deploy automatically on push to main branch
+1. **Railwayアカウントの作成**
+   - [Railway](https://railway.app)でアカウント作成
+
+2. **GitHubリポジトリの接続**
+   ```bash
+   # Railway CLIのインストール
+   npm install -g @railway/cli
+   
+   # ログイン
+   railway login
+   
+   # プロジェクトの初期化
+   railway init
+   ```
+
+3. **環境変数の設定**
+   - Railway ダッシュボードで環境変数を設定
+   - `.env.example`を参考に必要な値を入力
+
+4. **デプロイ**
+   ```bash
+   # 手動デプロイ
+   railway up
+   
+   # 自動デプロイはmainブランチへのpushで実行
+   ```
 
 ### Google Cloud Run
 
 ```bash
-# Build and deploy
+# Google Cloud SDKのインストールとログイン
+gcloud auth login
+gcloud config set project your-project-id
+
+# コンテナのビルドとデプロイ
 gcloud run deploy choibenassist-ai \
   --source . \
   --platform managed \
   --region asia-northeast1 \
-  --allow-unauthenticated
+  --allow-unauthenticated \
+  --set-env-vars GEMINI_API_KEY=your_key,SUPABASE_URL=your_url
 ```
 
-## 🤝 Integration with Frontend
-
-This API is designed to work with the Next.js frontend. The frontend should:
-
-1. Authenticate with the API using the secret key
-2. Pass user IDs in request bodies for personalized responses
-3. Handle rate limiting (429 status codes)
-4. Display AI-generated content to users
-
-## 📝 Example Request
+### Docker（ローカル確認用）
 
 ```bash
-curl -X POST "http://localhost:8000/api/ai/todo" \
-  -H "Authorization: Bearer your_api_secret_key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "user123",
-    "available_time": 120
-  }'
+# イメージのビルド
+docker build -t choibenassist-ai .
+
+# コンテナの実行
+docker run -p 8000:8000 --env-file .env choibenassist-ai
 ```
 
-## 📄 License
+### パフォーマンス最適化
 
-This project is part of ChoibenAssist learning application.
+#### 本番環境での推奨設定
+
+```bash
+# Gunicornでの起動例
+gunicorn app.main:app \
+  --workers 4 \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:8000 \
+  --preload \
+  --max-requests 1000 \
+  --max-requests-jitter 100
+```
+
+## コントリビューション
+
+### 開発フロー
+
+1. **Issue の作成**
+   - バグレポートや機能要求をIssueで報告
+
+2. **ブランチの作成**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+3. **開発とテスト**
+   ```bash
+   # 開発
+   # ...
+   
+   # テスト
+   pytest
+   
+   # コード品質チェック
+   black app/ tests/
+   flake8 app/ tests/
+   ```
+
+4. **プルリクエスト**
+   - 詳細な説明とテスト結果を含める
+   - レビューを経てmainブランチにマージ
+
+### コーディング規約
+
+- **PEP 8** に準拠
+- **Black** によるコードフォーマット
+- **型ヒント** の使用を推奨。APIスキーマやPydanticモデルでの型定義は必須。
+- **ドキュメンテーション** の充実
+  - **APIドキュメント** はFastAPIの自動生成機能を利用
+  - **コードコメント** は必要な箇所に記述
+  - **関数・クラス** の説明は必須
+  - **Docstring** 記述（Google Style）
+
+### コミットメッセージ
+
+```
+feat: 新機能の追加
+fix: バグ修正
+docs: ドキュメントの更新
+style: コードスタイルの修正
+refactor: リファクタリング
+test: テストの追加・修正
+chore: ビルドやツールの変更
+```
+
+---
+
+## ライセンス
+
+このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルを参照してください。
+
+## サポート
+
+- **Issue**: [GitHub Issues](https://github.com/develoop-official/ChoibenAssist-Back/issues)
+- **ドキュメント**: [docs/](docs/)
+- **チーム**: develoop-official
+
+---
+
+**ChoibenAssist** - 学習を加速するAIアシスタント
