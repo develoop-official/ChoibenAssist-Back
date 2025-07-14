@@ -167,17 +167,62 @@ API層 → サービス層 → モデル層
 
 - Python 3.12+ がインストールされていること
 - Git がインストールされていること
+- make がインストールされていること（macOSには標準でインストール済み）
 - Google Gemini API キーを取得済みであること
 - Supabase プロジェクトが作成済みであること
 
-### 1. プロジェクトのクローン
+### 🚀 クイックスタート（推奨）
+
+Makefileを使用した自動セットアップ：
+
+```bash
+# 1. プロジェクトのクローン
+git clone https://github.com/develoop-official/ChoibenAssist-Back.git
+cd ChoibenAssist-Back
+
+# 2. 自動セットアップ（仮想環境作成 + 依存関係インストール + 環境変数設定）
+make setup
+
+# 3. .envファイルを編集（API キーなどを設定）
+nano .env  # または お好みのエディタで編集
+
+# 4. 開発サーバー起動
+make run
+```
+
+**さらにクイックなセットアップ（ワンライナー）：**
+
+```bash
+# 自動セットアップスクリプトを使用
+git clone https://github.com/develoop-official/ChoibenAssist-Back.git && cd ChoibenAssist-Back && chmod +x scripts/quick-setup.sh && ./scripts/quick-setup.sh
+```
+
+利用可能なMakeコマンド一覧：
+
+```bash
+# ヘルプを表示
+make help
+
+# 主要コマンド
+make setup          # 完全な初期セットアップ
+make run            # 開発サーバー起動
+make test           # テスト実行
+make quality        # コード品質チェック（フォーマット + リント + 型チェック）
+make clean          # キャッシュファイルの削除
+```
+
+### 📋 手動セットアップ
+
+Makefileを使わない場合の手動セットアップ手順：
+
+#### 1. プロジェクトのクローン
 
 ```bash
 git clone https://github.com/develoop-official/ChoibenAssist-Back.git
 cd ChoibenAssist-Back
 ```
 
-### 2. 仮想環境の作成と有効化
+#### 2. 仮想環境の作成と有効化
 
 ```bash
 # 仮想環境の作成
@@ -192,17 +237,17 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. 依存関係のインストール
+#### 3. 依存関係のインストール
 
 ```bash
 # 本番用依存関係
 pip install -r requirements.txt
 
-# 開発用依存関係（オプション）
+# 開発用依存関係
 pip install -r requirements-dev.txt
 ```
 
-### 4. 環境変数の設定
+#### 4. 環境変数の設定
 
 ```bash
 # 環境変数ファイルをコピー
@@ -233,11 +278,30 @@ DEBUG=True
 ENVIRONMENT=development
 ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
+# Server設定
+HOST=127.0.0.1
+PORT=8000
+
 # レート制限
 RATE_LIMIT_PER_MINUTE=100
+
+# ログレベル
+LOG_LEVEL=INFO
 ```
 
-### 5. 開発サーバーの起動
+#### 5. 開発サーバーの起動
+
+**Makefileを使用（推奨）：**
+
+```bash
+# 通常起動
+make run
+
+# 自動リロード付き起動
+make run-reload
+```
+
+**手動起動：**
 
 ```bash
 # 推奨方法: run.pyスクリプトを使用
@@ -247,7 +311,7 @@ python run.py
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-### 6. 動作確認
+#### 6. 動作確認
 
 サーバーが起動したら、以下のURLでアクセス確認：
 
@@ -255,6 +319,161 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 - **ヘルスチェック**: http://127.0.0.1:8000/api/health
 - **API ドキュメント**: http://127.0.0.1:8000/docs
 - **ReDoc**: http://127.0.0.1:8000/redoc
+
+**Makefileでのヘルスチェック：**
+
+```bash
+# APIが起動しているかチェック
+make check-health
+
+# ブラウザでAPI ドキュメントを開く
+make docs
+```
+
+## 🛠️ Makefile コマンドリファレンス
+
+### 🚀 セットアップコマンド
+
+| コマンド | 説明 |
+|---------|------|
+| `make setup` | **完全な初期セットアップ**（仮想環境 + 依存関係 + 環境変数） |
+| `make venv` | Python仮想環境の作成 |
+| `make install-deps` | すべての依存関係をインストール |
+| `make setup-env` | `.env`ファイルをテンプレートから作成 |
+| `make verify-setup` | セットアップが正しく完了したかの確認 |
+
+### 🔧 開発コマンド
+
+| コマンド | 説明 |
+|---------|------|
+| `make run` | 開発サーバー起動 |
+| `make run-reload` | 自動リロード付きサーバー起動 |
+| `make shell` | 仮想環境のアクティベート手順を表示 |
+
+### ✅ コード品質コマンド
+
+| コマンド | 説明 |
+|---------|------|
+| `make format` | Black + isort でコードフォーマット |
+| `make lint` | Flake8 でリント実行 |
+| `make typecheck` | MyPy で型チェック |
+| `make quality` | 上記3つを一括実行 |
+
+### 🧪 テストコマンド
+
+| コマンド | 説明 |
+|---------|------|
+| `make test` | テスト実行 |
+| `make test-verbose` | 詳細出力付きテスト |
+| `make test-coverage` | カバレッジ付きテスト |
+| `make test-watch` | ファイル変更監視でテスト自動実行 |
+
+### 🌐 API関連コマンド
+
+| コマンド | 説明 |
+|---------|------|
+| `make check-health` | APIヘルスチェック |
+| `make docs` | ブラウザでAPI ドキュメントを開く |
+
+### 🧹 クリーンアップコマンド
+
+| コマンド | 説明 |
+|---------|------|
+| `make clean` | キャッシュファイル削除 |
+| `make clean-venv` | 仮想環境削除 |
+| `make reset` | 完全リセット（clean + clean-venv） |
+
+### 🚀 本番環境コマンド
+
+| コマンド | 説明 |
+|---------|------|
+| `make install-prod` | 本番用依存関係のみインストール |
+| `make run-prod` | Gunicorn での本番サーバー起動 |
+
+### 🔧 ユーティリティコマンド
+
+| コマンド | 説明 |
+|---------|------|
+| `make info` | プロジェクト情報表示 |
+| `make update` | 全依存関係の更新 |
+| `make requirements` | 現在の環境から requirements.txt 生成 |
+| `make help` | 利用可能なコマンド一覧表示 |
+
+## 🚨 トラブルシューティング
+
+### よくある問題と解決法
+
+#### 1. `pydantic-core` のビルドエラー
+
+**問題:** `ERROR: Failed building wheel for pydantic-core`
+
+**解決法:**
+```bash
+# 1. 仮想環境をリセット
+make reset
+
+# 2. 新しい環境でセットアップ
+make setup
+
+# または手動で：
+make clean-venv
+make venv
+.venv/bin/pip install --upgrade pip setuptools wheel
+.venv/bin/pip install --no-cache-dir -r requirements.txt
+```
+
+#### 2. Python 3.13での依存関係解決の遅延
+
+**問題:** pipインストール時に「This is taking longer than usual」
+
+**解決法:**
+- これは正常な動作です。Python 3.13ではパッケージの互換性チェックに時間がかかることがあります
+- しばらく待つか、Ctrl+Cで中断してから再実行してください
+
+#### 3. makeコマンドが見つからない
+
+**問題:** `make: command not found`
+
+**解決法:**
+```bash
+# macOS
+xcode-select --install
+
+# Ubuntu/Debian
+sudo apt-get install build-essential
+
+# CentOS/RHEL
+sudo yum groupinstall 'Development Tools'
+```
+
+#### 4. 仮想環境の有効化
+
+**問題:** 仮想環境が有効化されない
+
+**解決法:**
+```bash
+# 手動で有効化
+source .venv/bin/activate
+
+# または makeで確認
+make shell
+```
+
+#### 5. ポート使用中エラー
+
+**問題:** `Address already in use`
+
+**解決法:**
+```bash
+# ポート8000を使用しているプロセスを確認
+lsof -i :8000
+
+# プロセスを終了
+kill -9 <PID>
+
+# または別のポートを使用
+uvicorn app.main:app --host 127.0.0.1 --port 8001
+```
 
 ## Supabase データベース設計
 
@@ -474,6 +693,18 @@ curl -X POST "http://127.0.0.1:8000/api/ai/todo/user123?date=2025-07-14" \
 
 ### 開発環境のセットアップ
 
+**Makefileを使用（推奨）：**
+
+```bash
+# 開発用の完全セットアップ
+make setup
+
+# コード品質ツールの一括実行
+make quality
+```
+
+**手動セットアップ：**
+
 ```bash
 # 開発用依存関係のインストール
 pip install -r requirements-dev.txt
@@ -483,6 +714,20 @@ pre-commit install
 ```
 
 ### コード品質ツール
+
+**Makefileを使用：**
+
+```bash
+# コードフォーマット + リント + 型チェックを一括実行
+make quality
+
+# 個別実行
+make format      # Black + isort でフォーマット
+make lint        # Flake8 でリント
+make typecheck   # MyPy で型チェック
+```
+
+**手動実行：**
 
 ```bash
 # コードフォーマット
@@ -500,6 +745,15 @@ python scripts/lint.py
 ```
 
 ### ホットリロード開発
+
+**Makefileを使用：**
+
+```bash
+# 自動リロード付きサーバー起動
+make run-reload
+```
+
+**手動実行：**
 
 開発中は`run.py`を使用することで、ファイル変更時の自動リロードが有効になります：
 
@@ -533,6 +787,24 @@ VS Codeでのデバッグ設定例（`.vscode/launch.json`）：
 
 ### テストの実行
 
+**Makefileを使用（推奨）：**
+
+```bash
+# 基本テスト実行
+make test
+
+# 詳細出力付きテスト
+make test-verbose
+
+# カバレッジ付きテスト
+make test-coverage
+
+# ファイル変更監視でテスト自動実行
+make test-watch
+```
+
+**手動実行：**
+
 ```bash
 # 全テスト実行
 pytest
@@ -554,6 +826,17 @@ pytest -vvv --tb=long
 ```
 
 ### テストカバレッジ
+
+**Makefileを使用：**
+
+```bash
+# カバレッジレポート生成
+make test-coverage
+
+# HTMLレポートは htmlcov/ ディレクトリに生成されます
+```
+
+**手動実行：**
 
 ```bash
 # カバレッジレポートの生成
