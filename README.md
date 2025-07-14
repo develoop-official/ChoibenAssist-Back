@@ -367,6 +367,7 @@ make docs
 | `make test-verbose` | 詳細出力付きテスト |
 | `make test-coverage` | カバレッジ付きテスト |
 | `make test-watch` | ファイル変更監視でテスト自動実行 |
+| `make test-gemini` | **Gemini APIのリアルテスト** |
 
 ### 🌐 API関連コマンド
 
@@ -862,6 +863,37 @@ def test_settings():
     )
 ```
 
+### 🤖 Gemini AIサービスのテスト
+
+**リアルAPIテスト（APIキー必要）:**
+
+```bash
+# .envファイルにGEMINI_API_KEYを設定してから実行
+make test-gemini
+
+# 手動実行
+python scripts/test_gemini.py
+```
+
+**ユニットテスト（モック使用）:**
+
+```bash
+# Geminiサービスのユニットテスト
+pytest tests/test_gemini_service.py -v
+
+# 特定のテストケース
+pytest tests/test_gemini_service.py::TestGeminiService::test_generate_learning_plan -v
+```
+
+**テスト内容:**
+- 基本的なテキスト生成
+- 学習プラン生成
+- TODO生成
+- クイックレスポンス（モチベーション、ティップ、励まし）
+- レスポンス速度測定
+- ヘルスチェック
+- プロンプトシステム検証
+
 ## デプロイメント
 
 ### Railway
@@ -973,6 +1005,7 @@ gunicorn app.main:app \
   - **コードコメント** は必要な箇所に記述
   - **関数・クラス** の説明は必須
   - **Docstring** 記述（Google Style）
+  - できれば日本語で記述
 
 ### コミットメッセージ
 

@@ -150,6 +150,11 @@ test-watch: ## Run tests in watch mode
 	@echo "$(BLUE)Running tests in watch mode...$(NC)"
 	$(VENV_BIN)/pytest-watch
 
+.PHONY: test-gemini
+test-gemini: ## Test Gemini service with real API
+	@echo "$(BLUE)Testing Gemini service...$(NC)"
+	$(PYTHON_VENV) scripts/test_gemini.py
+
 # ============================================================================
 # Database/API Commands
 # ============================================================================
