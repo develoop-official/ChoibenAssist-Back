@@ -147,12 +147,6 @@ def test_prompts():
             print(f"  システムプロンプト長: {len(system_prompt)} 文字")
             print(f"  ユーザーテンプレート長: {len(user_template)} 文字")
         
-        # クイックプロンプトテスト
-        quick_types = ["motivation", "tip", "encouragement"]
-        for quick_type in quick_types:
-            prompt = get_prompt("quick", quick_type)
-            print(f"✅ quick_{quick_type}: {len(prompt)} 文字")
-        
         print()
         
     except Exception as e:
@@ -160,30 +154,132 @@ def test_prompts():
         print()
 
 
+def get_user_input():
+    """ユーザーから入力を受け取る。"""
+    print("📋 テスト用パラメータを入力してください:")
+    print("-" * 50)
+
+    # 学習プラン用パラメータ
+    goal = input("学習目標を入力してください (例: Pythonの基礎をマスターする): ").strip()
+    if not goal:
+        goal = "Pythonの基礎をマスターする"
+
+    time_str = input("利用可能時間（分）を入力してください (例: 120): ").strip()
+    try:
+        time_available = int(time_str) if time_str else 120
+    except ValueError:
+        time_available = 120
+
+    current_level = input("現在のレベルを入力してください (例: 初級): ").strip()
+    if not current_level:
+        current_level = "初級"
+
+    focus_areas_str = input("重点分野をカンマ区切りで入力してください (例: 変数,関数,クラス): ").strip()
+    focus_areas = [area.strip() for area in focus_areas_str.split(",")] if focus_areas_str else ["変数", "関数", "クラス"]
+
+    difficulty = input("難易度を入力してください (easy/medium/hard, 例: medium): ").strip()
+    if not difficulty:
+        difficulty = "medium"
+
+    # TODOリスト用パラメータ
+    recent_progress = input("最近の進捗を入力してください (例: 関数の基礎を学習済み): ").strip()
+    if not recent_progress:
+        recent_progress = "関数の基礎を学習済み"
+
+    weak_areas_str = input("弱点分野をカンマ区切りで入力してください (例: ループ,条件分岐): ").strip()
+    weak_areas = [area.strip() for area in weak_areas_str.split(",")] if weak_areas_str else ["ループ", "条件分岐"]
+
+    daily_goal = input("今日の目標を入力してください (例: 基本的なアルゴリズムの理解): ").strip()
+    if not daily_goal:
+        daily_goal = "基本的なアルゴリズムの理解"
+
+    print()
+
+    return {
+        "goal": goal,
+        "time_available": time_available,
+        "current_level": current_level,
+        "focus_areas": focus_areas,
+        "difficulty": difficulty,
+        "recent_progress": recent_progress,
+        "weak_areas": weak_areas,
+        "daily_goal": daily_goal
+    }
+
+
+async def test_learning_plan_with_input(params):
+    """ユーザー入力を使用した学習プラン生成をテスト."""
+    print("📚 学習プラン生成テスト（ユーザー入力）")
+    print("-" * 50)
+    
+    try:
+        settings = Settings()
+        service = GeminiService(settings)
+        
+        plan = await service.generate_learning_plan(
+            goal=params["goal"],
+            time_available=params["time_available"],
+            current_level=params["current_level"],
+            focus_areas=params["focus_areas"],
+            difficulty=params["difficulty"]
+        )
+        
+        print(f"✅ 学習プラン:\n{plan}")
+        print()
+        
+    except Exception as e:
+        print(f"❌ エラー: {e}")
+        print()
+
+async def test_todo_generation_with_input(params):
+    """ユーザー入力を使用したTODO生成をテスト."""
+    print("📝 TODO生成テスト（ユーザー入力）")
+    print("-" * 50)
+
+    try:
+        settings = Settings()
+        service = GeminiService(settings)
+
+        todo = await service.generate_todo_list(
+            time_available=params["time_available"],
+            recent_progress=params["recent_progress"],
+            weak_areas=params["weak_areas"],
+            daily_goal=params["daily_goal"]
+        )
+
+        print(f"✅ TODO:\n{todo}")
+        print()
+
+    except Exception as e:
+        print(f"❌ エラー: {e}")
+        print()
+
 async def run_all_tests():
     """すべてのテストを実行."""
     print("🚀 Geminiサービステスト開始")
     print("=" * 60)
     print()
-    
+
     # 環境変数チェック
     if not os.getenv("GEMINI_API_KEY"):
         print("❌ GEMINI_API_KEY 環境変数が設定されていません")
         print("   .envファイルにAPIキーを設定してください")
         return
-    
+
+    # ユーザー入力取得
+    params = get_user_input()
+
     # プロンプトシステム（非同期でない）
     test_prompts()
-    
+
     # 基本機能テスト
     await test_basic_generation()
     await test_health_check()
-    
-    # 具体的な機能テスト
-    await test_learning_plan()
-    await test_todo_generation()
 
-    
+    # ユーザー入力を使った具体的な機能テスト
+    await test_learning_plan_with_input(params)
+    await test_todo_generation_with_input(params)
+
     print("🎉 すべてのテストが完了しました！")
 
 

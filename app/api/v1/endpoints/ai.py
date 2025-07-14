@@ -59,11 +59,6 @@ class GoalRequest(BaseModel):
     constraints: Optional[str] = Field(default=None, description="Any constraints")
 
 
-class QuickRequest(BaseModel):
-    """Request model for quick responses."""
-    response_type: Literal["motivation", "tip", "encouragement"] = Field(..., description="Type of quick response")
-
-
 # Response models
 class AIResponse(BaseModel):
     """Standard AI response model."""
@@ -312,39 +307,6 @@ async def set_goals(
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to set goals: {str(e)}")
-
-
-@router.post("/quick", response_model=AIResponse)
-async def quick_response(
-    request: QuickRequest,
-    gemini_service: GeminiService = Depends(get_gemini_service_dep)
-) -> AIResponse:
-    """Generate quick motivational or tip responses.
-    
-    Args:
-        request: Quick response request data
-        gemini_service: Gemini service instance
-    
-    Returns:
-        AIResponse: Generated quick response
-    
-    Raises:
-        HTTPException: If quick response generation fails
-    """
-    try:
-        content = await gemini_service.quick_response(request.response_type)
-        
-        return AIResponse(
-            success=True,
-            content=content,
-            response_type=f"quick_{request.response_type}"
-        )
-    
-    except (GeminiRateLimitError, GeminiQuotaExceededError, GeminiAPIError, GeminiConfigurationError) as e:
-        raise handle_gemini_error(e)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate quick response: {str(e)}")
-
 
 @router.get("/health", response_model=dict)
 async def health_check(
