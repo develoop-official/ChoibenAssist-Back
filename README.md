@@ -207,6 +207,7 @@ make help
 make setup          # 完全な初期セットアップ
 make run            # 開発サーバー起動
 make test           # テスト実行
+make test-gemini    # Gemini APIのリアルテスト
 make quality        # コード品質チェック（フォーマット + リント + 型チェック）
 make clean          # キャッシュファイルの削除
 ```
@@ -480,9 +481,9 @@ uvicorn app.main:app --host 127.0.0.1 --port 8001
 
 このAPIを使用するために必要なSupabaseのテーブル構造です。
 
-### 認証・ユーザー管理
+### ユーザープロファイル
 
-#### `profiles` テーブル（ユーザープロファイル拡張）
+#### `user_profiles` テーブル（ユーザープロファイル）
 | カラム名 | 型 | 説明 | 制約 |
 |---------|---|------|------|
 | `id` | UUID | ユーザーID | PRIMARY KEY, REFERENCES auth.users(id) |
@@ -494,129 +495,24 @@ uvicorn app.main:app --host 127.0.0.1 --port 8001
 | `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
 | `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
 
-#### `api_keys` テーブル（API認証）
-| カラム名 | 型 | 説明 | 制約 |
-|---------|---|------|------|
-| `id` | UUID | API キー ID | PRIMARY KEY |
-| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
-| `api_key` | TEXT | APIキー文字列 | UNIQUE, NOT NULL |
-| `name` | TEXT | キー名 | DEFAULT 'Default API Key' |
-| `is_active` | BOOLEAN | 有効フラグ | DEFAULT TRUE |
-| `expires_at` | TIMESTAMP | 有効期限 | |
-| `last_used_at` | TIMESTAMP | 最終使用日時 | |
-| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
+### 学習記録
 
-### 学習データ管理
-
-#### `subjects` テーブル（学習科目）
-| カラム名 | 型 | 説明 | 制約 |
-|---------|---|------|------|
-| `id` | UUID | 科目ID | PRIMARY KEY |
-| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
-| `name` | TEXT | 科目名 | NOT NULL |
-| `description` | TEXT | 説明 | |
-| `color` | TEXT | 表示色 | DEFAULT '#3B82F6' |
-| `is_active` | BOOLEAN | 有効フラグ | DEFAULT TRUE |
-| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
-| `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
-
-#### `learning_records` テーブル（学習記録）
+#### `study_records` テーブル（学習記録）
 | カラム名 | 型 | 説明 | 制約 |
 |---------|---|------|------|
 | `id` | UUID | 記録ID | PRIMARY KEY |
 | `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
-| `subject_id` | UUID | 科目ID | REFERENCES subjects(id) |
+| `subject` | TEXT | 学習科目 | NOT NULL |
 | `date` | DATE | 学習日 | NOT NULL |
 | `duration_minutes` | INTEGER | 学習時間（分） | NOT NULL, > 0 |
 | `score` | INTEGER | スコア | 0-100 |
 | `difficulty` | TEXT | 難易度 | 'easy', 'medium', 'hard' |
 | `notes` | TEXT | メモ | |
 | `tags` | TEXT[] | タグ | DEFAULT '{}' |
+| `goals` | TEXT | 学習目標 | |
+| `progress_rate` | DECIMAL(5,2) | 進捗率 | DEFAULT 0.0 |
 | `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
 | `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
-
-### AI生成データ
-
-#### `learning_plans` テーブル（学習プラン）
-| カラム名 | 型 | 説明 | 制約 |
-|---------|---|------|------|
-| `id` | UUID | プランID | PRIMARY KEY |
-| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
-| `title` | TEXT | プラン名 | NOT NULL |
-| `description` | TEXT | 説明 | |
-| `goal` | TEXT | 学習目標 | NOT NULL |
-| `difficulty` | TEXT | 難易度 | 'easy', 'medium', 'hard' |
-| `estimated_duration_minutes` | INTEGER | 予想所要時間 | |
-| `plan_data` | JSONB | AI生成プラン詳細 | NOT NULL |
-| `status` | TEXT | ステータス | 'active', 'completed', 'paused' |
-| `start_date` | DATE | 開始日 | |
-| `end_date` | DATE | 終了日 | |
-| `created_by_ai` | BOOLEAN | AI生成フラグ | DEFAULT TRUE |
-| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
-| `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
-
-#### `daily_todos` テーブル（日次TODO）
-| カラム名 | 型 | 説明 | 制約 |
-|---------|---|------|------|
-| `id` | UUID | TODO ID | PRIMARY KEY |
-| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
-| `date` | DATE | 対象日 | NOT NULL |
-| `todos` | JSONB | AI生成TODOリスト | NOT NULL |
-| `completed_todos` | JSONB | 完了TODO | DEFAULT '[]' |
-| `total_estimated_minutes` | INTEGER | 予想総時間 | |
-| `actual_minutes` | INTEGER | 実際の時間 | DEFAULT 0 |
-| `completion_rate` | DECIMAL(5,2) | 完了率 | DEFAULT 0.0 |
-| `created_by_ai` | BOOLEAN | AI生成フラグ | DEFAULT TRUE |
-| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
-| `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
-
-#### `ai_analyses` テーブル（AI分析結果）
-| カラム名 | 型 | 説明 | 制約 |
-|---------|---|------|------|
-| `id` | UUID | 分析ID | PRIMARY KEY |
-| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
-| `analysis_type` | TEXT | 分析タイプ | 'progress', 'advice', 'goals' |
-| `input_data` | JSONB | 入力データ | NOT NULL |
-| `result_data` | JSONB | AI分析結果 | NOT NULL |
-| `period_start` | DATE | 分析期間開始 | |
-| `period_end` | DATE | 分析期間終了 | |
-| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
-
-#### `learning_goals` テーブル（学習目標）
-| カラム名 | 型 | 説明 | 制約 |
-|---------|---|------|------|
-| `id` | UUID | 目標ID | PRIMARY KEY |
-| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
-| `subject_id` | UUID | 科目ID | REFERENCES subjects(id) |
-| `title` | TEXT | 目標名 | NOT NULL |
-| `description` | TEXT | 説明 | |
-| `target_value` | DECIMAL(10,2) | 目標値 | |
-| `current_value` | DECIMAL(10,2) | 現在値 | DEFAULT 0 |
-| `unit` | TEXT | 単位 | 'hours', 'points', 'chapters' |
-| `target_date` | DATE | 目標達成日 | |
-| `status` | TEXT | ステータス | 'active', 'completed', 'paused', 'cancelled' |
-| `priority` | INTEGER | 優先度 | 1-5 |
-| `created_by_ai` | BOOLEAN | AI生成フラグ | DEFAULT FALSE |
-| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
-| `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
-
-### 使用状況追跡
-
-#### `api_usage_logs` テーブル（API使用ログ）
-| カラム名 | 型 | 説明 | 制約 |
-|---------|---|------|------|
-| `id` | UUID | ログID | PRIMARY KEY |
-| `user_id` | UUID | ユーザーID | REFERENCES auth.users(id) |
-| `api_key_id` | UUID | APIキーID | REFERENCES api_keys(id) |
-| `endpoint` | TEXT | エンドポイント | NOT NULL |
-| `method` | TEXT | HTTPメソッド | NOT NULL |
-| `status_code` | INTEGER | ステータスコード | NOT NULL |
-| `response_time_ms` | INTEGER | レスポンス時間（ms） | |
-| `request_size_bytes` | INTEGER | リクエストサイズ | |
-| `response_size_bytes` | INTEGER | レスポンスサイズ | |
-| `ip_address` | INET | IPアドレス | |
-| `user_agent` | TEXT | ユーザーエージェント | |
-| `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
 
 ### セキュリティ設定
 
@@ -626,7 +522,7 @@ uvicorn app.main:app --host 127.0.0.1 --port 8001
 
 各テーブルに以下のインデックスを作成することを推奨：
 - `user_id`カラムへのインデックス
-- よく使用される検索条件（`date`, `status`, `is_active`など）
+- よく使用される検索条件（`date`, `subject`など）
 - 複合インデックス（`user_id + date`など）
 
 ## API エンドポイント

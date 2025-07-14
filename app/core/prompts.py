@@ -119,48 +119,31 @@ GOAL_PROMPTS = {
 達成可能で測定可能な目標を提案してください。"""
 }
 
-# Quick response prompts for fast interactions
-QUICK_PROMPTS = {
-    "motivation": f"""{BASE_SYSTEM_PROMPT}
-学習のモチベーションを高める一言を提供してください。具体的で前向きなメッセージをお願いします。""",
-    
-    "tip": f"""{BASE_SYSTEM_PROMPT}
-今日の学習に役立つ実用的なコツを1つ教えてください。すぐに実践できるものをお願いします。""",
-    
-    "encouragement": f"""{BASE_SYSTEM_PROMPT}
-学習で行き詰まっている人への励ましの言葉をお願いします。具体的で実用的なアドバイスを含めてください。"""
-}
-
 def get_prompt(category: str, prompt_type: str = "system") -> str:
-    """Get prompt by category and type.
+    """カテゴリとタイプに基づいてプロンプトを取得する。
     
     Args:
-        category: Prompt category (learning_plan, todo, analysis, advice, goal, quick)
-        prompt_type: Type of prompt (system, user_template)
+        category: プロンプトカテゴリ (learning_plan, todo, analysis, advice, goal)
+        prompt_type: プロンプトタイプ (system, user_template)
     
     Returns:
-        str: The requested prompt
+        str: 要求されたプロンプト
     
     Raises:
-        ValueError: If category or prompt_type is not found
+        ValueError: カテゴリまたはプロンプトタイプが見つからない場合
     """
     prompt_mapping = {
         "learning_plan": LEARNING_PLAN_PROMPTS,
         "todo": TODO_PROMPTS,
         "analysis": ANALYSIS_PROMPTS,
         "advice": ADVICE_PROMPTS,
-        "goal": GOAL_PROMPTS,
-        "quick": QUICK_PROMPTS
+        "goal": GOAL_PROMPTS
     }
     
     if category not in prompt_mapping:
         raise ValueError(f"Unknown prompt category: {category}")
     
     prompts = prompt_mapping[category]
-    
-    # For quick prompts, return the prompt directly if it exists
-    if category == "quick" and prompt_type in prompts:
-        return prompts[prompt_type]
     
     if prompt_type not in prompts:
         raise ValueError(f"Unknown prompt type '{prompt_type}' for category '{category}'")

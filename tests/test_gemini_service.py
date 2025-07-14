@@ -146,20 +146,6 @@ class TestGeminiService:
         mock_model.generate_content.assert_called_once()
     
     @pytest.mark.asyncio
-    async def test_quick_response_motivation(self, gemini_service, mock_model):
-        """Test quick motivation response."""
-        result = await gemini_service.quick_response("motivation")
-        
-        assert result == "Test response from Gemini"
-        mock_model.generate_content.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_quick_response_invalid_type(self, gemini_service):
-        """Test quick response with invalid type."""
-        with pytest.raises(ValueError, match="Invalid quick response type"):
-            await gemini_service.quick_response("invalid_type")
-    
-    @pytest.mark.asyncio
     async def test_health_check_success(self, gemini_service, mock_model):
         """Test successful health check."""
         result = await gemini_service.health_check()
@@ -257,14 +243,6 @@ class TestPromptsIntegration:
         assert "学習プランを作成する" in system_prompt
         assert "{goal}" in user_template
         assert "{time_available}" in user_template
-    
-    def test_quick_prompts(self):
-        """Test quick prompt retrieval."""
-        motivation_prompt = get_prompt("quick", "motivation")
-        tip_prompt = get_prompt("quick", "tip")
-        
-        assert "モチベーション" in motivation_prompt
-        assert "コツ" in tip_prompt
     
     def test_invalid_prompt_category(self):
         """Test invalid prompt category raises error."""

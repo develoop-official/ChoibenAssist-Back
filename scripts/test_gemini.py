@@ -111,33 +111,6 @@ async def test_todo_generation():
         print()
 
 
-async def test_quick_responses():
-    """クイックレスポンステスト."""
-    print("⚡ クイックレスポンステスト")
-    print("-" * 50)
-    
-    try:
-        settings = Settings()
-        service = GeminiService(settings)
-        
-        # モチベーション
-        motivation = await service.quick_response("motivation")
-        print(f"✅ モチベーション: {motivation}")
-        
-        # ティップ
-        tip = await service.quick_response("tip")
-        print(f"✅ ティップ: {tip}")
-        
-        # 励まし
-        encouragement = await service.quick_response("encouragement")
-        print(f"✅ 励まし: {encouragement}")
-        print()
-        
-    except Exception as e:
-        print(f"❌ エラー: {e}")
-        print()
-
-
 async def test_health_check():
     """ヘルスチェックテスト."""
     print("🔍 ヘルスチェックテスト")
@@ -155,54 +128,6 @@ async def test_health_check():
         print(f"❌ エラー: {e}")
         print()
 
-
-async def test_response_speed():
-    """レスポンス速度テスト."""
-    print("⏱️ レスポンス速度テスト")
-    print("-" * 50)
-    
-    try:
-        import time
-        settings = Settings()
-        service = GeminiService(settings)
-        
-        # 5回のテスト（レート制限を考慮）
-        times = []
-        successful_tests = 0
-        
-        for i in range(3):  # 減らして安全にテスト
-            try:
-                start_time = time.time()
-                await service.quick_response("tip")
-                end_time = time.time()
-                
-                response_time = end_time - start_time
-                times.append(response_time)
-                successful_tests += 1
-                print(f"テスト {i+1}: {response_time:.2f}秒 ✅")
-                
-                # レート制限を避けるため少し待機
-                if i < 2:
-                    await asyncio.sleep(2)
-                    
-            except GeminiRateLimitError as e:
-                print(f"テスト {i+1}: レート制限に達しました ⚠️")
-                print(f"   残り{successful_tests}回のテスト結果で分析します")
-                break
-            except Exception as e:
-                print(f"テスト {i+1}: エラー - {e} ❌")
-        
-        if times:
-            avg_time = sum(times) / len(times)
-            print(f"✅ 成功したテスト: {successful_tests}回")
-            print(f"✅ 平均レスポンス時間: {avg_time:.2f}秒")
-        else:
-            print("⚠️ 成功したテストがありませんでした")
-        print()
-        
-    except Exception as e:
-        print(f"❌ エラー: {e}")
-        print()
 
 
 def test_prompts():
@@ -257,10 +182,7 @@ async def run_all_tests():
     # 具体的な機能テスト
     await test_learning_plan()
     await test_todo_generation()
-    await test_quick_responses()
-    
-    # パフォーマンステスト
-    await test_response_speed()
+
     
     print("🎉 すべてのテストが完了しました！")
 

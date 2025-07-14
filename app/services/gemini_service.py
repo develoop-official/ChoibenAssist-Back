@@ -20,20 +20,20 @@ logger = logging.getLogger(__name__)
 
 
 class GeminiService:
-    """Google Gemini AI service for fast text generation."""
+    """高速テキスト生成のためのGoogle Gemini AIサービス。"""
     
     def __init__(self, settings: Settings):
-        """Initialize Gemini service.
+        """Geminiサービスを初期化する。
         
         Args:
-            settings: Application settings containing API key
+            settings: APIキーを含むアプリケーション設定
         """
         self.settings = settings
         self._configure_gemini()
         self.model = self._create_model()
     
     def _configure_gemini(self) -> None:
-        """Configure Gemini with API key and safety settings."""
+        """APIキーと安全設定でGeminiを設定する。"""
         if not self.settings.gemini_api_key:
             raise GeminiConfigurationError("GEMINI_API_KEY environment variable is required")
         
@@ -41,10 +41,10 @@ class GeminiService:
         logger.info("Gemini API configured successfully")
     
     def _create_model(self) -> genai.GenerativeModel:
-        """Create Gemini model with optimized settings for fast response.
+        """高速レスポンス用に最適化されたGeminiモデルを作成する。
         
         Returns:
-            genai.GenerativeModel: Configured Gemini model
+            genai.GenerativeModel: 設定済みのGeminiモデル
         """
         # Use Gemini 2.0 Flash for fast response
         model = genai.GenerativeModel(
@@ -67,13 +67,13 @@ class GeminiService:
         return model
     
     def _parse_api_error(self, error: Exception) -> Exception:
-        """Parse Gemini API error and return appropriate custom exception.
+        """Gemini APIエラーを解析し、適切なカスタム例外を返す。
         
         Args:
-            error: Original exception from Gemini API
+            error: Gemini APIからの元の例外
             
         Returns:
-            Exception: Custom exception with user-friendly message
+            Exception: ユーザーフレンドリーなメッセージを持つカスタム例外
         """
         error_str = str(error)
         
@@ -85,18 +85,19 @@ class GeminiService:
             
             # Check if it's free tier rate limit
             if "FreeTier" in error_str:
-                message = "APIの無料枠のレート制限に達しました。しばらく待ってから再試行してください。"
-                logger.warning(f"Rate limit reached (free tier): retry in {retry_seconds}s")
+                message = f"⏱️ Gemini API無料枠のレート制限に達しました。{retry_seconds}秒後に再試行してください。"
+                # Don't log as warning since it's expected behavior for free tier
+                logger.info(f"Rate limit reached (free tier): retry in {retry_seconds}s")
                 return GeminiRateLimitError(message, retry_seconds)
             else:
-                message = "APIのレート制限に達しました。しばらく待ってから再試行してください。"
-                logger.warning(f"Rate limit reached: retry in {retry_seconds}s")
+                message = f"⏱️ APIレート制限に達しました。{retry_seconds}秒後に再試行してください。"
+                logger.info(f"Rate limit reached: retry in {retry_seconds}s")
                 return GeminiRateLimitError(message, retry_seconds)
         
         # Quota exceeded error
         if "quota" in error_str.lower() and "exceeded" in error_str.lower():
-            message = "APIの利用制限に達しました。プランの確認をお願いします。"
-            logger.error("Quota exceeded")
+            message = "📊 APIの月間利用制限に達しました。Gemini APIのプランをご確認ください。"
+            logger.warning("Quota exceeded - consider upgrading API plan")
             return GeminiQuotaExceededError(message)
         
         # Generic API error
@@ -112,19 +113,19 @@ class GeminiService:
         return GeminiAPIError("予期しないエラーが発生しました。")
     
     def _should_log_error(self, error: Exception) -> bool:
-        """Determine if error should be logged based on its type.
+        """エラーの種類に基づいてログを出力するかどうかを判定する。
         
         Args:
-            error: Exception to check
+            error: チェック対象の例外
             
         Returns:
-            bool: True if error should be logged
+            bool: エラーをログに出力する場合はTrue
         """
-        # Don't log rate limit errors as they are expected with free tier
+        # レート制限エラーは無料枠では想定内のエラーなのでログ出力しない
         if isinstance(error, GeminiRateLimitError):
             return False
         
-        # Log other errors
+        # その他のエラーはログ出力する
         return True
     
     async def generate_text(
@@ -133,21 +134,21 @@ class GeminiService:
         system_prompt: Optional[str] = None,
         **kwargs: Any
     ) -> str:
-        """Generate text using Gemini with fast response optimization.
+        """高速レスポンス最適化を使用してGeminiでテキストを生成する。
         
         Args:
-            prompt: User prompt
-            system_prompt: Optional system prompt for context
-            **kwargs: Additional parameters
+            prompt: ユーザープロンプト
+            system_prompt: コンテキスト用のオプションのシステムプロンプト
+            **kwargs: 追加パラメータ
         
         Returns:
-            str: Generated text response
+            str: 生成されたテキストレスポンス
         
         Raises:
-            GeminiRateLimitError: If rate limit is exceeded
-            GeminiQuotaExceededError: If quota is exceeded  
-            GeminiAPIError: If API returns an error
-            ValueError: If response is empty
+            GeminiRateLimitError: レート制限を超過した場合
+            GeminiQuotaExceededError: クォータを超過した場合
+            GeminiAPIError: APIがエラーを返した場合
+            ValueError: レスポンスが空の場合
         """
         try:
             # Combine system and user prompts
@@ -185,17 +186,17 @@ class GeminiService:
         focus_areas: Optional[List[str]] = None,
         difficulty: str = "medium"
     ) -> str:
-        """Generate learning plan using predefined prompts.
+        """事前定義されたプロンプトを使用して学習プランを生成する。
         
         Args:
-            goal: Learning goal
-            time_available: Available time in minutes
-            current_level: Current skill level
-            focus_areas: Areas to focus on
-            difficulty: Difficulty level
+            goal: 学習目標
+            time_available: 利用可能時間（分）
+            current_level: 現在のスキルレベル
+            focus_areas: 重点分野
+            difficulty: 難易度
         
         Returns:
-            str: Generated learning plan
+            str: 生成された学習プラン
         """
         system_prompt = get_prompt("learning_plan", "system")
         user_prompt = get_prompt("learning_plan", "user_template").format(
@@ -215,16 +216,16 @@ class GeminiService:
         weak_areas: Optional[List[str]] = None,
         daily_goal: Optional[str] = None
     ) -> str:
-        """Generate daily TODO list.
+        """日次TODOリストを生成する。
         
         Args:
-            time_available: Available time in minutes
-            recent_progress: Recent learning progress
-            weak_areas: Areas that need improvement
-            daily_goal: Today's specific goal
+            time_available: 利用可能時間（分）
+            recent_progress: 最近の学習進捗
+            weak_areas: 改善が必要な分野
+            daily_goal: 今日の具体的な目標
         
         Returns:
-            str: Generated TODO list
+            str: 生成されたTODOリスト
         """
         system_prompt = get_prompt("todo", "system")
         user_prompt = get_prompt("todo", "user_template").format(
@@ -243,16 +244,16 @@ class GeminiService:
         goals: str,
         progress_rate: float
     ) -> str:
-        """Analyze learning progress.
+        """学習進捗を分析する。
         
         Args:
-            period: Analysis period
-            learning_records: Learning records data
-            goals: Learning goals
-            progress_rate: Current progress rate
+            period: 分析期間
+            learning_records: 学習記録データ
+            goals: 学習目標
+            progress_rate: 現在の進捗率
         
         Returns:
-            str: Generated analysis
+            str: 生成された分析結果
         """
         system_prompt = get_prompt("analysis", "system")
         user_prompt = get_prompt("analysis", "user_template").format(
@@ -271,16 +272,16 @@ class GeminiService:
         concerns: Optional[str] = None,
         target_goal: Optional[str] = None
     ) -> str:
-        """Provide learning advice.
+        """学習アドバイスを提供する。
         
         Args:
-            current_issues: Current learning issues
-            learning_status: Current learning status
-            concerns: Specific concerns
-            target_goal: Target goal
+            current_issues: 現在の学習課題
+            learning_status: 現在の学習状況
+            concerns: 具体的な懸念事項
+            target_goal: 目標
         
         Returns:
-            str: Generated advice
+            str: 生成されたアドバイス
         """
         system_prompt = get_prompt("advice", "system")
         user_prompt = get_prompt("advice", "user_template").format(
@@ -300,17 +301,17 @@ class GeminiService:
         available_resources: str,
         constraints: Optional[str] = None
     ) -> str:
-        """Generate SMART goals.
+        """SMART目標を生成する。
         
         Args:
-            desired_outcome: Desired learning outcome
-            timeline: Goal timeline
-            current_level: Current skill level
-            available_resources: Available resources
-            constraints: Any constraints
+            desired_outcome: 希望する学習成果
+            timeline: 目標の期限
+            current_level: 現在のスキルレベル
+            available_resources: 利用可能なリソース
+            constraints: 制約条件
         
         Returns:
-            str: Generated SMART goals
+            str: 生成されたSMART目標
         """
         system_prompt = get_prompt("goal", "system")
         user_prompt = get_prompt("goal", "user_template").format(
@@ -323,43 +324,25 @@ class GeminiService:
         
         return await self.generate_text(user_prompt, system_prompt)
     
-    async def quick_response(self, response_type: str) -> str:
-        """Generate quick motivational or tip responses.
-        
-        Args:
-            response_type: Type of quick response (motivation, tip, encouragement)
-        
-        Returns:
-            str: Generated quick response
-        
-        Raises:
-            ValueError: If response_type is invalid
-        """
-        try:
-            prompt = get_prompt("quick", response_type)
-            return await self.generate_text(prompt)
-        except ValueError as e:
-            raise ValueError(f"Invalid quick response type: {response_type}") from e
-    
     def _build_full_prompt(self, system_prompt: Optional[str], user_prompt: str) -> str:
-        """Build full prompt combining system and user prompts.
+        """システムプロンプトとユーザープロンプトを結合してフルプロンプトを構築する。
         
         Args:
-            system_prompt: Optional system prompt
-            user_prompt: User prompt
+            system_prompt: オプションのシステムプロンプト
+            user_prompt: ユーザープロンプト
         
         Returns:
-            str: Combined prompt
+            str: 結合されたプロンプト
         """
         if system_prompt:
             return f"{system_prompt}\n\n{user_prompt}"
         return user_prompt
     
     async def health_check(self) -> Dict[str, Any]:
-        """Check if Gemini service is working.
+        """Geminiサービスが正常に動作しているかチェックする。
         
         Returns:
-            Dict[str, Any]: Health check result
+            Dict[str, Any]: ヘルスチェック結果
         """
         try:
             test_response = await self.generate_text("テスト")
@@ -385,18 +368,18 @@ class GeminiService:
             }
 
 
-# Global instance to be used throughout the application
+# アプリケーション全体で使用するグローバルインスタンス
 _gemini_service: Optional[GeminiService] = None
 
 
 def get_gemini_service(settings: Optional[Settings] = None) -> GeminiService:
-    """Get or create Gemini service instance.
+    """Geminiサービスのインスタンスを取得または作成する。
     
     Args:
-        settings: Optional settings to use for initialization
+        settings: 初期化に使用するオプションの設定
     
     Returns:
-        GeminiService: Gemini service instance
+        GeminiService: Geminiサービスのインスタンス
     """
     global _gemini_service
     
