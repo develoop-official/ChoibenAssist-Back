@@ -36,8 +36,7 @@ ChoibenAssist AI BackendはFastAPIで構築されたマイクロサービスで�
 
 | 機能 | エンドポイント | 説明 |
 |-----|-------------|------|
-| **学習プラン生成** | `POST /api/ai/plan` | 個人の学習履歴に基づいたカスタマイズされたプラン |
-| **今日のTODO提案** | `POST /api/ai/todo` | 日々の効果的な学習タスクの自動生成 |
+| **TODOリスト生成** | `POST /api/ai/todo` | 日々の効果的な学習タスクの自動生成 |
 | **学習進捗分析** | `POST /api/ai/analysis` | データに基づいた進捗分析と改善提案 |
 | **学習アドバイス** | `POST /api/ai/advice` | パーソナライズされた学習指導 |
 | **目標設定支援** | `POST /api/ai/goals` | SMART目標の提案とトラッキング |
@@ -477,9 +476,7 @@ kill -9 <PID>
 uvicorn app.main:app --host 127.0.0.1 --port 8001
 ```
 
-## Supabase データベース設計
-
-このAPIを使用するために必要なSupabaseのテーブル構造です。
+## Supabase データベース
 
 ### ユーザープロファイル
 
@@ -514,6 +511,22 @@ uvicorn app.main:app --host 127.0.0.1 --port 8001
 | `created_at` | TIMESTAMP | 作成日時 | DEFAULT NOW() |
 | `updated_at` | TIMESTAMP | 更新日時 | DEFAULT NOW() |
 
+### TODOリスト
+
+#### `todo_items` テーブル（TODOリスト）
+| カラム名 | 型 | 説明 | 制約 |
+|---------|---|------|------|
+| `id` | UUID | タスクID | PRIMARY KEY, DEFAULT gen_random_uuid() |
+| `user_id` | UUID | ユーザーID | NOT NULL, REFERENCES auth.users(id) ON DELETE CASCADE |
+| `task` | TEXT | タスク内容 | NOT NULL |
+| `due_date` | DATE | 締切日 | |
+| `status` | TEXT | タスクの状態 | DEFAULT 'pending' ('pending', 'completed'など) |
+| `created_at` | TIMESTAMPTZ | 作成日時 | NOT NULL, DEFAULT NOW() |
+| `updated_at` | TIMESTAMPTZ | 更新日時 | NOT NULL, DEFAULT NOW() |
+
+
+
+
 ### セキュリティ設定
 
 すべてのテーブルにRow Level Security (RLS)を設定し、ユーザーは自分のデータのみアクセス可能にします。
@@ -547,29 +560,12 @@ Content-Type: application/json
 
 | メソッド | エンドポイント | 説明 | 認証 |
 |---------|-------------|------|-----|
-| `POST` | `/api/ai/plan/{user_id}` | 学習プラン生成 | 必要 |
 | `POST` | `/api/ai/todo/{user_id}` | 今日のTODOリスト生成 | 必要 |
 | `POST` | `/api/ai/analysis/{user_id}` | 学習進捗分析 | 必要 |
 | `POST` | `/api/ai/advice/{user_id}` | 学習アドバイス | 必要 |
 | `POST` | `/api/ai/goals/{user_id}` | 学習目標設定支援 | 必要 |
 
 ### リクエスト例
-
-#### 学習プラン生成
-
-```bash
-curl -X POST "http://127.0.0.1:8000/api/ai/plan/user123" \
-  -H "Authorization: Bearer your_api_secret_key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "goal": "数学の基礎を固める",
-    "time_available": 120,
-    "preferences": {
-      "focus_area": ["微分", "積分"],
-      "difficulty": "medium"
-    }
-  }'
-```
 
 #### 今日のTODO提案
 
