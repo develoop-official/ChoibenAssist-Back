@@ -161,7 +161,7 @@ class ScrapboxService:
 
             # ページの本文を取得
             page_contents = []
-            for page in recent_pages[:15]:  # 最新15ページまで解析
+            for page in recent_pages[:10]:  # 最新10ページまで解析
                 title = page.get("title", "")
                 content = await self.get_page_text(project_name, title)
 
@@ -406,7 +406,6 @@ class ScrapboxService:
 弱点分野: [課題や困りごと、苦手分野をカンマ区切り]
 
 注意：
-- プログラミング以外の分野も含めて分析してください
 - 日本語の表現や文脈を理解して分析してください
 - データがない場合は適切なメッセージを返してください
 """

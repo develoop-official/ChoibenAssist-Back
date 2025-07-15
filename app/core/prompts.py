@@ -64,6 +64,7 @@ def fetch_learning_records_sync(user_id: str) -> Dict[str, str]:
 BASE_SYSTEM_PROMPT = """あなたは学習アシスタントです。
 効率的で実用的なアドバイスを短時間で提供してください。
 回答は日本語で、簡潔かつ具体的にしてください。
+ユーザーの学習目標を重視してください。
 長い説明や過度な思考過程は避け、直接的で実行可能な提案を心がけてください。"""
 
 # Learning plan generation prompts
@@ -106,7 +107,7 @@ TODO_PROMPTS = {
 弱点分野: {weak_areas}
 今日の目標: {daily_goal}
 
-今日中に完了できる具体的なタスクを提案してください。""",
+今日の目標: {daily_goal}にそった課題、今日中に完了できる具体的なタスクを提案してください。""",
 }
 
 
