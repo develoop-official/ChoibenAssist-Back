@@ -582,6 +582,38 @@ curl -X POST "http://127.0.0.1:8000/api/ai/todo/user123?date=2025-07-14" \
   }'
 ```
 
+## Scrapbox統合機能
+
+### 概要
+Scrapbox APIを活用して、学習記録を直接取得し、パーソナライズされたTODOリストを生成する機能です。
+
+### エンドポイント
+
+#### TODO生成
+```bash
+# Scrapboxデータを基にTODO生成（プロジェクト名直接指定）
+curl -X POST "http://127.0.0.1:8000/api/ai/scrapbox-todo/your-project-name" \
+  -H "Authorization: your_strong_secret_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "time_available": 90,
+    "daily_goal": "プログラミング学習の復習"
+  }'
+```
+
+#### 学習記録確認
+```bash
+# Scrapboxから取得した学習記録を確認
+curl -X GET "http://127.0.0.1:8000/api/ai/scrapbox-learning-records/your-project-name" \
+  -H "Authorization: your_strong_secret_key_here"
+```
+
+### 認証について
+- Supabaseの認証およびユーザー情報の管理はクライアント側で行ってください
+- バックエンドAPIは認証後のリクエストのみを処理します
+
+---
+
 ## 開発
 
 ### 開発環境のセットアップ
