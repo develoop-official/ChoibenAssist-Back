@@ -342,8 +342,8 @@ async def generate_scrapbox_todo(
 
     Args:
         project_name: Scrapboxプロジェクト名
-        request: ScrapboxTODOリクエストデータ
-        gemini_service: Geminiサービスインスタンス
+        request: ScrapboxTODOリクエストデータ(可能な時間、今日の目標)
+        gemini_service: Geminiサービスインスタンス（任意）
 
     Returns:
         AIResponse: 生成されたTODOリスト
