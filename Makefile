@@ -156,6 +156,57 @@ test-gemini: ## Test Gemini service with real API
 	$(PYTHON_VENV) scripts/test_gemini.py
 
 # ============================================================================
+# Docker Commands
+# ============================================================================
+
+.PHONY: docker-build
+docker-build: ## Build Docker image
+	@echo "$(BLUE)Building Docker image...$(NC)"
+	docker build -t choibenassist-backend .
+	@echo "$(GREEN)✅ Docker image built$(NC)"
+
+.PHONY: docker-run
+docker-run: ## Run application with Docker
+	@echo "$(BLUE)Starting application with Docker...$(NC)"
+	docker-compose up -d
+	@echo "$(GREEN)✅ Application started at http://localhost:8000$(NC)"
+
+.PHONY: docker-dev
+docker-dev: ## Run application in development mode with Docker
+	@echo "$(BLUE)Starting development server with Docker...$(NC)"
+	docker-compose -f docker-compose.dev.yml up -d
+	@echo "$(GREEN)✅ Development server started at http://localhost:8000$(NC)"
+
+.PHONY: docker-stop
+docker-stop: ## Stop Docker containers
+	@echo "$(BLUE)Stopping Docker containers...$(NC)"
+	docker-compose down
+	docker-compose -f docker-compose.dev.yml down || true
+	@echo "$(GREEN)✅ Docker containers stopped$(NC)"
+
+.PHONY: docker-logs
+docker-logs: ## Show Docker container logs
+	@echo "$(BLUE)Showing Docker logs...$(NC)"
+	docker-compose logs -f
+
+.PHONY: docker-test
+docker-test: ## Run tests in Docker container
+	@echo "$(BLUE)Running tests in Docker...$(NC)"
+	docker run --rm choibenassist-backend pytest tests/ -v
+	@echo "$(GREEN)✅ Docker tests completed$(NC)"
+
+.PHONY: docker-shell
+docker-shell: ## Get shell access to Docker container
+	@echo "$(BLUE)Accessing Docker container shell...$(NC)"
+	docker exec -it choibenassist-backend /bin/bash
+
+.PHONY: docker-clean
+docker-clean: ## Clean Docker images and containers
+	@echo "$(BLUE)Cleaning Docker resources...$(NC)"
+	docker system prune -f
+	@echo "$(GREEN)✅ Docker cleanup completed$(NC)"
+
+# ============================================================================
 # Database/API Commands
 # ============================================================================
 

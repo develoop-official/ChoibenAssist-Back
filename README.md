@@ -398,6 +398,143 @@ make docs
 | `make info` | プロジェクト情報表示 |
 | `make update` | 全依存関係の更新 |
 | `make requirements` | 現在の環境から requirements.txt 生成 |
+
+### 🐳 Dockerコマンド
+
+| コマンド | 説明 |
+|---------|------|
+| `make docker-build` | Dockerイメージをビルド |
+| `make docker-run` | アプリケーションをDockerで起動 |
+| `make docker-dev` | 開発モードでDockerを起動（ライブリロード） |
+| `make docker-stop` | Dockerコンテナを停止 |
+| `make docker-logs` | Dockerコンテナのログを表示 |
+| `make docker-test` | Dockerコンテナ内でテスト実行 |
+| `make docker-shell` | Dockerコンテナにシェルアクセス |
+| `make docker-clean` | Docker リソースをクリーンアップ |
+
+## 🐳 Dockerでの開発
+
+### ローカル開発
+
+```bash
+# 1. Dockerイメージをビルド
+make docker-build
+
+# 2. 開発モードで起動（ライブリロード有効）
+make docker-dev
+
+# 3. アプリケーションにアクセス
+open http://localhost:8000/docs
+
+# 4. ログを確認
+make docker-logs
+
+# 5. 停止
+make docker-stop
+```
+
+### 本番モード
+
+```bash
+# 本番モードで起動
+make docker-run
+
+# アプリケーションにアクセス
+open http://localhost:8000/docs
+```
+
+### テスト実行
+
+```bash
+# Dockerコンテナ内でテスト実行
+make docker-test
+```
+
+## 🚀 デプロイメント
+
+### シンプルなDockerデプロイ（本番環境のみ）
+
+このプロジェクトは、GitHub Actions → GitLab CI/CD → Dockerという最もシンプルなデプロイ方式を採用しています。
+
+#### 1. サーバーの準備
+
+サーバーでDockerのセットアップを実行：
+
+```bash
+# サーバーにSSH接続
+ssh user@your-server.com
+
+# シンプルセットアップの実行
+curl -sSL https://raw.githubusercontent.com/develoop-official/ChoibenAssist-Back/main/deploy/simple-docker-setup.sh | bash
+```
+
+#### 2. GitHubシークレットの設定
+
+GitHubリポジトリの **Settings > Secrets and variables > Actions** で設定：
+
+```
+GITLAB_SSH_KEY: GitLabへのアクセス用SSHキー
+```
+
+#### 3. GitLabの環境変数設定
+
+GitLabプロジェクトの **Settings > CI/CD > Variables** で設定：
+
+```bash
+# サーバー接続情報
+SSH_PRIVATE_KEY: デプロイ用SSHキー
+DEPLOY_USER: SSHユーザー名
+PRODUCTION_SERVER: 本番サーバーのIP
+
+# アプリケーション設定
+GEMINI_API_KEY: Gemini APIキー
+SUPABASE_URL: SupabaseプロジェクトURL
+SUPABASE_ANON_KEY: Supabase匿名キー
+API_SECRET_KEY: APIシークレットキー
+```
+
+#### 4. デプロイ実行
+
+- **`main`ブランチ**: 本番環境に手動デプロイ (ポート8000)
+
+#### 5. アクセス確認
+
+```bash
+# 本番環境
+http://your-server:8000/docs
+
+# ヘルスチェック
+curl http://your-server:8000/api/health
+```
+
+### 手動Docker管理
+
+必要に応じて手動でコンテナを管理：
+
+```bash
+# コンテナ状態確認
+docker ps
+
+# ログ確認
+docker logs choibenassist-production
+
+# コンテナ再起動
+docker restart choibenassist-production
+
+# コンテナ停止
+docker stop choibenassist-production
+
+# 古いイメージの削除
+docker image prune -f
+```
+
+### 特徴
+
+- ✅ **最小限の環境構築**: サーバーにはDockerのみインストール
+- ✅ **GitなしでOK**: サーバーにGitリポジトリ不要
+- ✅ **シンプルなCI/CD**: 複雑な設定や依存関係なし
+- ✅ **簡単な運用**: docker commandsのみで管理可能
+- ✅ **本番環境のみ**: ステージング環境なしでシンプルに
 | `make help` | 利用可能なコマンド一覧表示 |
 
 ## 🚨 トラブルシューティング

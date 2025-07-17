@@ -1,0 +1,73 @@
+stages:
+  - test
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_IMAGE_NAME: "choibenassist-backend"
+
+# Test stage
+test:
+  stage: test
+  image: python:3.11
+  before_script:
+    - echo "🔧 Setting up Python environment..."
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - echo "📦 Installing dependencies..."
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - pip install -r requirements-dev.txt
+    - echo "✅ Dependencies installed successfully"
+  script:
+    - echo "🧪 Running tests..."
+    - pytest tests/ -v
+    - echo "🎨 Checking code formatting..."
+    - black --check app/ tests/
+    - echo "✅ All tests passed!"
+  only:
+    - main
+
+# Deploy to production (main branch only)
+deploy_production:
+  stage: deploy
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  before_script:
+    - echo "🐳 Setting up Docker environment..."
+  script:
+    - |
+      echo "🐳 Starting Docker build and deploy process..."
+      
+      # Build Docker image
+      echo "📦 Building Docker image..."
+      docker build -t $DOCKER_IMAGE_NAME:production .
+      echo "✅ Docker image built successfully"
+
+      
+      # Run new container
+      echo "🚀 Starting new container..."
+      docker run -d \
+        --name choibenassist-production \
+        --restart unless-stopped \
+        -p 8000:8000 \
+        --env-file .env \
+        choibenassist-backend:production
+      echo "✅ New container started successfully"
+      
+      # Health check
+      echo "🏥 Performing health check..."
+      sleep 30
+      curl -f http://localhost:8000/api/health
+      echo "✅ Health check passed! Deployment completed successfully 🎉"
+  environment:
+    name: production
+    url: http://$PRODUCTION_SERVER:8000
+  only:
+    - main

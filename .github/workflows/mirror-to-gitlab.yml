@@ -1,0 +1,51 @@
+name: Mirror to GitLab
+
+on:
+  push:
+    branches:
+      - main  # ←ミラーしたいブランチ
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # 完全な履歴を取得
+
+      - name: Push to GitLab
+        env:
+          GITLAB_SSH_KEY: ${{ secrets.GITLAB_SSH_KEY }}
+          GITLAB_USERNAME: root
+          GITLAB_URL: gitlab.p-nasi.pgw.jp
+        run: |
+          # SSH鍵の設定
+          mkdir -p ~/.ssh
+          echo "$GITLAB_SSH_KEY" > ~/.ssh/gitlab_key
+          chmod 600 ~/.ssh/gitlab_key
+          
+          # SSH設定
+          cat >> ~/.ssh/config << EOF
+          Host gitlab
+            HostName ${GITLAB_URL}
+            User git
+            IdentityFile ~/.ssh/gitlab_key
+            StrictHostKeyChecking no
+          EOF
+          
+          # Git設定
+          git config --global user.name "${GITLAB_USERNAME}"
+          git config --global user.email "${GITLAB_USERNAME}@${GITLAB_URL}"
+          
+          # リモートの追加（既存のリモートを削除してから追加）
+          git remote remove gitlab || true
+          git remote add gitlab "git@gitlab:pplale/pplale-web_front.git"
+          
+          # デバッグ情報の出力
+          echo "Pushing to GitLab..."
+          echo "GitLab URL: ${GITLAB_URL}"
+          echo "Username: ${GITLAB_USERNAME}"
+          
+          # プッシュ実行
+          git push gitlab main
