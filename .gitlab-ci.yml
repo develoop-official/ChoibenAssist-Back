@@ -10,6 +10,8 @@ variables:
 test:
   stage: test
   image: python:3.13.3
+  tags:
+    - python 
   before_script:
     - echo "🔧 Setting up Python environment..."
     - python -m venv .venv
@@ -39,6 +41,8 @@ deploy_production:
     DOCKER_TLS_CERTDIR: "/certs"
     DOCKER_TLS_VERIFY: 1
     DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  tags:
+    - docker 
   before_script:
     - echo "🐳 Setting up Docker environment..."
   script:
