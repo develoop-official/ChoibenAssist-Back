@@ -5,6 +5,8 @@ stages:
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_IMAGE_NAME: "choibenassist-backend"
+  # Common environment variables for all stages
+  RATE_LIMIT_PER_MINUTE: "100"
 
 # Test stage
 test:
@@ -21,6 +23,19 @@ test:
     - pip install -r requirements.txt
     - pip install -r requirements-dev.txt
     - echo "✅ Dependencies installed successfully"
+    # Create .env file for tests
+    - echo "⚙️ Creating test environment file..."
+    - |
+      cat > .env << 'TEST_ENV_EOF'
+      GEMINI_API_KEY=${GEMINI_API_KEY}
+      SUPABASE_URL=${SUPABASE_URL}
+      SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      API_SECRET_KEY=${API_SECRET_KEY}
+      DEBUG=True
+      ENVIRONMENT=test
+      RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE}
+      TEST_ENV_EOF
+    - echo "✅ Test environment file created"
   script:
     - echo "🧪 Running tests..."
     - pytest tests/ -v
@@ -63,7 +78,7 @@ deploy_production:
       API_SECRET_KEY=${API_SECRET_KEY}
       DEBUG=False
       ENVIRONMENT=production
-      RATE_LIMIT_PER_MINUTE=100
+      RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE}
       ENV_EOF
       echo "✅ Environment file created"
 

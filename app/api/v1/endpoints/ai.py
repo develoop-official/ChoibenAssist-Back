@@ -6,9 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from app.core.config import Settings
-from app.core.exceptions import (GeminiAPIError, GeminiConfigurationError,
-                                 GeminiQuotaExceededError,
-                                 GeminiRateLimitError)
+from app.core.exceptions import (
+    GeminiAPIError,
+    GeminiConfigurationError,
+    GeminiQuotaExceededError,
+    GeminiRateLimitError,
+)
 from app.core.prompts import get_prompt
 from app.services.gemini_service import GeminiService, get_gemini_service
 
@@ -365,7 +368,7 @@ async def generate_scrapbox_todo(
             time_available=request.time_available,
             recent_progress=learning_records or "学習記録なし",
             weak_areas="Scrapboxデータから分析中",
-            daily_goal=request.daily_goal or "効果的な学習"
+            daily_goal=request.daily_goal or "効果的な学習",
         )
 
         # Geminiでテキスト生成

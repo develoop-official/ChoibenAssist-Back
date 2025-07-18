@@ -9,9 +9,12 @@ import google.generativeai as genai
 from google.generativeai.types import HarmBlockThreshold, HarmCategory
 
 from app.core.config import Settings
-from app.core.exceptions import (GeminiAPIError, GeminiConfigurationError,
-                                 GeminiQuotaExceededError,
-                                 GeminiRateLimitError)
+from app.core.exceptions import (
+    GeminiAPIError,
+    GeminiConfigurationError,
+    GeminiQuotaExceededError,
+    GeminiRateLimitError,
+)
 from app.core.prompts import get_prompt
 
 

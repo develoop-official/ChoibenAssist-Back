@@ -28,11 +28,11 @@ class ScrapboxService:
         """
         self.base_url = "https://scrapbox.io/api"
         self.timeout = timeout
-        
+
         # GeminiServiceを初期化
         if settings is None:
             settings = Settings()
-        
+
         try:
             self.gemini_service: Optional[GeminiService] = GeminiService(settings)
         except Exception as e:
@@ -176,13 +176,14 @@ class ScrapboxService:
 
             # AI解析を実行
             ai_result = await self._analyze_with_ai(page_contents)
-            
+
             # AI解析が失敗した場合は従来の方法にフォールバック
-            if (ai_result["recent_progress"] in ["AIサービスが利用できません", "AI解析でエラーが発生しました"] or
-                ai_result["weak_areas"] in ["AIサービスが利用できません", "AI解析でエラーが発生しました"]):
-                
+            if ai_result["recent_progress"] in [
+                "AIサービスが利用できません",
+                "AI解析でエラーが発生しました",
+            ] or ai_result["weak_areas"] in ["AIサービスが利用できません", "AI解析でエラーが発生しました"]:
                 logger.info("AI解析が利用できないため、従来の解析方法を使用します")
-                
+
                 # 従来のキーワードベース解析
                 learning_keywords = []
                 weak_areas_keywords = []
@@ -204,9 +205,9 @@ class ScrapboxService:
                 # 従来の方法で結果を生成
                 recent_progress = self._generate_recent_progress(page_contents)
                 weak_areas = self._generate_weak_areas(weak_areas_keywords)
-                
+
                 return {"recent_progress": recent_progress, "weak_areas": weak_areas}
-            
+
             # AI解析結果を返す
             return ai_result
 
@@ -357,7 +358,9 @@ class ScrapboxService:
         else:
             return "継続的な学習により改善中"
 
-    async def _analyze_with_ai(self, page_contents: List[Dict[str, Any]]) -> Dict[str, str]:
+    async def _analyze_with_ai(
+        self, page_contents: List[Dict[str, Any]]
+    ) -> Dict[str, str]:
         """
         AIを使ってページ内容を解析し、学習記録と弱点分野を抽出する
 
@@ -368,10 +371,7 @@ class ScrapboxService:
             Dict[str, str]: 解析結果（recent_progress、weak_areas）
         """
         if not self.gemini_service or not page_contents:
-            return {
-                "recent_progress": "AIサービスが利用できません",
-                "weak_areas": "AIサービスが利用できません"
-            }
+            return {"recent_progress": "AIサービスが利用できません", "weak_areas": "AIサービスが利用できません"}
 
         # ページ内容をテキストとして整理
         pages_text = []
@@ -379,13 +379,13 @@ class ScrapboxService:
             title = page.get("title", "")
             content = page.get("content", "")
             updated = page.get("updated", 0)
-            
+
             # タイムスタンプを日付に変換
             if updated:
                 date = datetime.fromtimestamp(updated).strftime("%Y-%m-%d")
             else:
                 date = "不明"
-            
+
             page_text = f"【{title}】({date})\n{content[:500]}"  # 500文字まで
             pages_text.append(page_text)
 
@@ -413,29 +413,26 @@ class ScrapboxService:
         try:
             # AI解析を実行
             response = await self.gemini_service.generate_text(analysis_prompt)
-            
+
             # レスポンスをパース
             recent_progress = "AIによる解析結果が取得できませんでした"
             weak_areas = "AIによる解析結果が取得できませんでした"
-            
+
             if response:
-                lines = response.strip().split('\n')
+                lines = response.strip().split("\n")
                 for line in lines:
-                    if line.startswith('最近の進捗:'):
-                        recent_progress = line.replace('最近の進捗:', '').strip()
-                    elif line.startswith('弱点分野:'):
-                        weak_areas = line.replace('弱点分野:', '').strip()
-            
-            return {
-                "recent_progress": recent_progress,
-                "weak_areas": weak_areas
-            }
-            
+                    if line.startswith("最近の進捗:"):
+                        recent_progress = line.replace("最近の進捗:", "").strip()
+                    elif line.startswith("弱点分野:"):
+                        weak_areas = line.replace("弱点分野:", "").strip()
+
+            return {"recent_progress": recent_progress, "weak_areas": weak_areas}
+
         except Exception as e:
             logger.error(f"AI解析中にエラー: {e}")
             return {
                 "recent_progress": "AI解析でエラーが発生しました",
-                "weak_areas": "AI解析でエラーが発生しました"
+                "weak_areas": "AI解析でエラーが発生しました",
             }
 
 
