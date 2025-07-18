@@ -9,7 +9,7 @@ variables:
 # Test stage
 test:
   stage: test
-  image: python:3.11
+  image: python:3.13.3
   before_script:
     - echo "🔧 Setting up Python environment..."
     - python -m venv .venv
