@@ -165,6 +165,10 @@ class GeminiService:
             logger.info("Text generated successfully")
             return response.text.strip()
 
+        except ValueError as e:
+            # ValueError should be raised as-is (e.g., empty response)
+            logger.error(f"Failed to generate text: {str(e)}")
+            raise
         except Exception as e:
             # Parse and raise appropriate custom exception
             custom_error = self._parse_api_error(e)

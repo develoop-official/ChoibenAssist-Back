@@ -6,10 +6,18 @@ Scrapboxサービスのインタラクティブテストスクリプト
 import asyncio
 import sys
 from typing import Optional
+import pytest
 
 from app.services.scrapbox_service import ScrapboxService
 
 
+@pytest.fixture
+def project_name():
+    """テスト用のプロジェクト名を提供するfixture"""
+    return "test-project"  # デフォルトのテストプロジェクト名
+
+
+@pytest.mark.asyncio
 async def test_scrapbox_service(project_name: str):
     """
     指定されたプロジェクト名でScrapboxサービスをテストする
