@@ -25,9 +25,10 @@ test:
       EOF
     - |
       # Dockerでテスト実行
-      docker build -t ${DOCKER_IMAGE_NAME}:test .
+      docker system prune -f
+      docker build --no-cache -t ${DOCKER_IMAGE_NAME}:test .
       docker run --rm --env-file .env.test ${DOCKER_IMAGE_NAME}:test sh -c "
-        pip install -r requirements-dev.txt &&
+        pip install --no-cache-dir -r requirements-dev.txt &&
         pytest tests/ -v &&
         black --check app/ tests/
       "
@@ -55,7 +56,8 @@ deploy:
       EOF
     - |
       # Dockerイメージビルド
-      docker build -t ${DOCKER_IMAGE_NAME}:production .
+      docker system prune -f
+      docker build --no-cache -t ${DOCKER_IMAGE_NAME}:production .
       
       # 既存コンテナ停止・削除
       docker stop choibenassist-production || true
