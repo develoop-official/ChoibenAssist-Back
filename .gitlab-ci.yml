@@ -3,166 +3,78 @@ stages:
   - deploy
 
 variables:
-  DOCKER_DRIVER: overlay2
   DOCKER_IMAGE_NAME: "choibenassist-backend"
   DOCKER_HOST: unix:///var/run/docker.sock
-  # Common environment variables for all stages
-  RATE_LIMIT_PER_MINUTE: "100"
 
-# Test stage
+# Test stage - Docker内でテスト実行
 test:
   stage: test
   tags:
     - shell
-  before_script:
-    - echo "🔧 Setting up Docker test environment..."
-    - echo "🔍 Checking required environment variables..."
-    - test -n "$GEMINI_API_KEY" || (echo "❌ GEMINI_API_KEY is not set!" && exit 1)
-    - test -n "$SUPABASE_URL" || (echo "❌ SUPABASE_URL is not set!" && exit 1)
-    - test -n "$SUPABASE_ANON_KEY" || (echo "❌ SUPABASE_ANON_KEY is not set!" && exit 1)
-    - test -n "$API_SECRET_KEY" || (echo "❌ API_SECRET_KEY is not set!" && exit 1)
-    - echo "✅ All required environment variables are set."
-    # Create .env file for tests
-    - echo "⚙️ Creating test environment file..."
+  script:
+    - echo "🧪 Running tests in Docker..."
     - |
-      cat > .env.test << 'TEST_ENV_EOF'
+      # テスト用環境変数ファイル作成
+      cat > .env.test << EOF
       GEMINI_API_KEY=${GEMINI_API_KEY}
       SUPABASE_URL=${SUPABASE_URL}
       SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
       API_SECRET_KEY=${API_SECRET_KEY}
       DEBUG=True
       ENVIRONMENT=test
-      RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE}
-      TEST_ENV_EOF
-    - echo "✅ Test environment file created"
-  script:
+      EOF
     - |
-      echo "🐳 Running tests in Docker container..."
-      
-      # Build test image
-      echo "📦 Building test Docker image..."
-      docker build -t $DOCKER_IMAGE_NAME:test -f Dockerfile .
-      echo "✅ Test Docker image built successfully"
-      
-      # Run tests in Docker container
-      echo "🧪 Running tests in Docker container..."
-      docker run --rm \
-        -v $(pwd):/app \
-        -w /app \
-        --env-file .env.test \
-        $DOCKER_IMAGE_NAME:test \
-        sh -c "
-          echo '📦 Installing dev dependencies...' &&
-          pip install -r requirements-dev.txt &&
-          echo '🧪 Running pytest tests...' &&
-          pytest tests/ -v &&
-          echo '🎨 Checking code formatting with black...' &&
-          black --check app/ tests/ &&
-          echo '✅ All tests passed in Docker!'
-        "
-      
-      # Clean up test image
-      docker rmi $DOCKER_IMAGE_NAME:test || true
-      echo "✅ Docker tests completed successfully!"
+      # Dockerでテスト実行
+      docker build -t ${DOCKER_IMAGE_NAME}:test .
+      docker run --rm --env-file .env.test ${DOCKER_IMAGE_NAME}:test sh -c "
+        pip install -r requirements-dev.txt &&
+        pytest tests/ -v &&
+        black --check app/ tests/
+      "
+      docker rmi ${DOCKER_IMAGE_NAME}:test
+    - echo "✅ Tests completed!"
   only:
     - main
 
-# Deploy to production (main branch only)
-deploy_production:
+# Deploy stage - 本番デプロイ
+deploy:
   stage: deploy
   tags:
-    - shell  # または web, backend など実際のRunnerのtagに合わせる 
-  before_script:
-    - echo "🐳 Setting up Docker environment..."
-    - echo "🔍 Checking required environment variables..."
-    - test -n "$GEMINI_API_KEY" || (echo "❌ GEMINI_API_KEY is not set!" && exit 1)
-    - test -n "$SUPABASE_URL" || (echo "❌ SUPABASE_URL is not set!" && exit 1)
-    - test -n "$SUPABASE_ANON_KEY" || (echo "❌ SUPABASE_ANON_KEY is not set!" && exit 1)
-    - test -n "$API_SECRET_KEY" || (echo "❌ API_SECRET_KEY is not set!" && exit 1)
-    - echo "✅ All required environment variables are set."
-    - echo "🔧 Initializing Docker..."
-    - docker info || (echo "❌ Docker is not running!" && exit 1)
+    - shell
   script:
+    - echo "Deploying to production..."
     - |
-      echo "🐳 Starting Docker build and deploy process..."
+      # 本番用環境変数ファイル作成
+      cat > .env.production << EOF
+      GEMINI_API_KEY=${GEMINI_API_KEY}
+      SUPABASE_URL=${SUPABASE_URL}
+      SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      API_SECRET_KEY=${API_SECRET_KEY}
+      DEBUG=False
+      ENVIRONMENT=production
+      EOF
+    - |
+      # Dockerイメージビルド
+      docker build -t ${DOCKER_IMAGE_NAME}:production .
       
-      # Create production environment file
-      echo "⚙️ Creating production environment file..."
-      echo "GEMINI_API_KEY=$GEMINI_API_KEY" > .env.production
-      echo "SUPABASE_URL=$SUPABASE_URL" >> .env.production
-      echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env.production
-      echo "API_SECRET_KEY=$API_SECRET_KEY" >> .env.production
-      echo "DEBUG=False" >> .env.production
-      echo "ENVIRONMENT=production" >> .env.production
-      echo "RATE_LIMIT_PER_MINUTE=$RATE_LIMIT_PER_MINUTE" >> .env.production
-      echo "✅ Production environment file created"
-      
-      # Build Docker image using Dockerfile
-      echo "📦 Building Docker image using Dockerfile..."
-      docker build --no-cache -t $DOCKER_IMAGE_NAME:production -f Dockerfile .
-      echo "✅ Docker image built successfully"
-
-      # Stop existing container forcefully
-      echo "🛑 Stopping existing container..."
+      # 既存コンテナ停止・削除
       docker stop choibenassist-production || true
       docker rm -f choibenassist-production || true
-      echo "✅ Old container removed"
       
-      # Run new container with production env file
-      echo "🚀 Starting new container..."
+      # 新しいコンテナ起動
       docker run -d \
         --name choibenassist-production \
         --restart always \
         -p 8000:8000 \
         --env-file .env.production \
-        -v /var/log/choibenassist:/app/logs \
-        $DOCKER_IMAGE_NAME:production
-      echo "✅ New container started successfully"
-      
-      # Verify deployment
-      echo "🔍 Verifying deployment..."
-      docker ps | grep choibenassist-production
-      
-      # Health check and integration test
-      echo "🏥 Performing health check and integration tests..."
+        ${DOCKER_IMAGE_NAME}:production
+    - |
+      # ヘルスチェック
+      echo "🏥 Health check..."
       sleep 30
-      
-      # Basic health check
-      echo "🔍 Testing API health endpoint..."
-      curl -f http://localhost:8000/api/health || (echo "❌ Health check failed!" && exit 1)
-      echo "✅ Health check passed!"
-      
-      # Additional API tests
-      echo "🧪 Running integration tests against deployed container..."
-      docker run --rm \
-        --network host \
-        --env-file .env.production \
-        $DOCKER_IMAGE_NAME:production \
-        sh -c "
-          echo '🔍 Testing API endpoints...' &&
-          python -c \"
-import requests
-import sys
-try:
-    # Test health endpoint
-    response = requests.get('http://localhost:8000/api/health', timeout=10)
-    assert response.status_code == 200
-    print('✅ Health endpoint test passed')
-    
-    # Test root endpoint
-    response = requests.get('http://localhost:8000/', timeout=10)
-    print(f'🔍 Root endpoint status: {response.status_code}')
-    
-    print('✅ All integration tests passed!')
-except Exception as e:
-    print(f'❌ Integration test failed: {e}')
-    sys.exit(1)
-          \"
-        " || (echo "❌ Integration tests failed!" && exit 1)
-      
-      echo "✅ All tests passed! Deployment completed successfully 🎉"
+      curl -f http://localhost:8000/api/health
+    - echo "✅ Deployment completed!"
   environment:
     name: production
-    url: http://$PRODUCTION_SERVER:8000
   only:
     - main
