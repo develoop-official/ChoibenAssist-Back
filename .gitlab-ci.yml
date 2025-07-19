@@ -5,6 +5,7 @@ stages:
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_IMAGE_NAME: "choibenassist-backend"
+  DOCKER_HOST: unix:///var/run/docker.sock
   # Common environment variables for all stages
   RATE_LIMIT_PER_MINUTE: "100"
 

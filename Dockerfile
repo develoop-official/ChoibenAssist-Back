@@ -1,5 +1,5 @@
 # Multi-stage build for production
-FROM python:3.11-slim as builder
+FROM python:3.13.3 as builder
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -14,7 +14,19 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Production stage
-FROM python:3.11-slim
+FROM python:3.13.3
+
+# Define build arguments
+ARG GEMINI_API_KEY
+ARG SUPABASE_URL
+ARG SUPABASE_ANON_KEY
+ARG API_SECRET_KEY
+
+# Set environment variables
+ENV GEMINI_API_KEY=$GEMINI_API_KEY
+ENV SUPABASE_URL=$SUPABASE_URL
+ENV SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+ENV API_SECRET_KEY=$API_SECRET_KEY
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
