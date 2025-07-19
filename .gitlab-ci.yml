@@ -14,6 +14,9 @@ test:
   script:
     - echo "🧪 Running tests in Docker..."
     - |
+      # 事前クリーンアップ
+      docker system prune -f --volumes
+      
       # テスト用環境変数ファイル作成
       cat > .env.test << EOF
       GEMINI_API_KEY=${GEMINI_API_KEY}
