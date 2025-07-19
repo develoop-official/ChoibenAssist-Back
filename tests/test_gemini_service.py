@@ -243,7 +243,7 @@ class TestPromptsIntegration:
         system_prompt = get_prompt("learning_plan", "system")
         user_template = get_prompt("learning_plan", "user_template")
 
-        assert "学習プランを作成する" in system_prompt
+        assert "学習プランを以下の形式で出力してください" in system_prompt
         assert "{goal}" in user_template
         assert "{time_available}" in user_template
 
