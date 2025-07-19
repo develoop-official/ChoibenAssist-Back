@@ -47,13 +47,17 @@ app = FastAPI(
 )
 
 # Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
-)
+if settings.allowed_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.allowed_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
+    )
+    print(f"CORS enabled for origins: {settings.allowed_origins}")
+else:
+    print("CORS disabled - no allowed origins specified")
 
 # Include routers
 app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
@@ -76,4 +80,14 @@ async def health_check():
         "status": "healthy",
         "service": "ChoibenAssist AI Backend",
         "environment": settings.environment,
+    }
+
+
+@app.get("/api/cors-info")
+async def cors_info():
+    """CORS configuration information (for debugging)"""
+    return {
+        "allowed_origins": settings.allowed_origins,
+        "cors_enabled": bool(settings.allowed_origins),
+        "cors_middleware_active": len(settings.allowed_origins) > 0,
     }

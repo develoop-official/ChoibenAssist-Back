@@ -28,10 +28,14 @@ class Settings:
         self.enable_docs: bool = os.getenv("ENABLE_DOCS", "True").lower() == "true"
 
         # CORS settings
-        origins_env = os.getenv("ALLOWED_ORIGINS", "*")
-        self.allowed_origins: List[str] = [
-            origin.strip() for origin in origins_env.split(",")
-        ]
+        origins_env = os.getenv("ALLOWED_ORIGINS", "")
+        if origins_env:
+            self.allowed_origins: List[str] = [
+                origin.strip() for origin in origins_env.split(",") if origin.strip()
+            ]
+        else:
+            # デフォルトは空のリスト（CORSを無効化）
+            self.allowed_origins: List[str] = []
 
         # Rate limiting
         self.rate_limit_per_minute: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "100"))
