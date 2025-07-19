@@ -887,145 +887,56 @@ pytest -v
 pytest -vvv --tb=long
 ```
 
-### テストカバレッジ
 
-**Makefileを使用：**
 
-```bash
-# カバレッジレポート生成
-make test-coverage
+## ChoibenAssist-Back デプロイ手順
 
-# HTMLレポートは htmlcov/ ディレクトリに生成されます
-```
+## デプロイ概要
+ChoibenAssist-Backは、GitLab CI/CDを使用して `https://choiben-back.youkan.uk/` にデプロイされています。以下は、GitLab Runnerを活用したデプロイプロセスの詳細です。
 
-**手動実行：**
+## 使用ツール
+- **GitLab Runner**: GitLab CI/CDのジョブを実行するためのツール。
+- **Docker**: アプリケーションをコンテナ化してデプロイ。
+- **FastAPI**: ChoibenAssist-Backのバックエンドフレームワーク。
+- **Supabase**: データベースおよび認証管理。
 
-```bash
-# カバレッジレポートの生成
-pytest --cov=app --cov-report=html --cov-report=term
+## デプロイ手順
 
-# カバレッジレポートの確認
-open htmlcov/index.html  # macOS
-start htmlcov/index.html # Windows
-```
+### 1. GitLab CI/CD 設定
+GitLabリポジトリ: [ChoibenAssist-Back](https://gitlab.p-nasi.pgw.jp/develoop/choibenassist-back)
 
-### テスト環境の設定
+`.gitlab-ci.yml` ファイルを以下のように設定しました:
+- **ジョブの定義**:
+  - `before_script` で必要な依存関係をインストール。
+  - `docker system prune` を使用してディスク容量を確保。
+- **環境変数**:
+  - `.env` ファイルに`GEMINI_API_KEY`や`SUPABASE_URL`などの必要な環境変数を設定。
+- **デプロイステージ**:
+  - Dockerイメージをビルドし、サーバーにプッシュ。
+  - サーバー上でコンテナを起動。
 
-テスト用の環境変数は`tests/conftest.py`で管理：
+### 2. Docker設定
+- **Dockerfile**:
+  - `requirements-dev.txt` とテストディレクトリを含めるように修正。
+  - マルチステージビルドを使用してイメージサイズを最適化。
+- **.dockerignore**:
+  - 不要なファイルを除外し、ビルド効率を向上。
 
-```python
-# テスト用の設定オーバーライド
-@pytest.fixture
-def test_settings():
-    return Settings(
-        environment="testing",
-        debug=False,
-        gemini_api_key="test_key"
-    )
-```
+### 3. CORS設定
+- **環境変数**:
+  - Gitlab変数で `ALLOWED_ORIGINS` を設定。
 
-### 🤖 Gemini AIサービスのテスト
+### 4. GitLab Runnerの設定
+- **Runnerの登録**:
+  - GitLab Runnerをサーバーにインストールし、GitLabに登録。
+- **Executorの選択**:
+  - `shell` Executorを使用してジョブを実行。
+- **ジョブの実行**:
+  - CI/CDパイプラインをトリガーしてデプロイを実行。
 
-**リアルAPIテスト（APIキー必要）:**
-
-```bash
-# .envファイルにGEMINI_API_KEYを設定してから実行
-make test-gemini
-
-# 手動実行
-python scripts/test_gemini.py
-```
-
-**ユニットテスト（モック使用）:**
-
-```bash
-# Geminiサービスのユニットテスト
-pytest tests/test_gemini_service.py -v
-
-# 特定のテストケース
-pytest tests/test_gemini_service.py::TestGeminiService::test_generate_learning_plan -v
-```
-
-**テスト内容:**
-- 基本的なテキスト生成
-- 学習プラン生成
-- TODO生成
-- クイックレスポンス（モチベーション、ティップ、励まし）
-- レスポンス速度測定
-- ヘルスチェック
-- プロンプトシステム検証
-
-## デプロイメント
-
-### Railway
-
-1. **Railwayアカウントの作成**
-   - [Railway](https://railway.app)でアカウント作成
-
-2. **GitHubリポジトリの接続**
-   ```bash
-   # Railway CLIのインストール
-   npm install -g @railway/cli
-   
-   # ログイン
-   railway login
-   
-   # プロジェクトの初期化
-   railway init
-   ```
-
-3. **環境変数の設定**
-   - Railway ダッシュボードで環境変数を設定
-   - `.env.example`を参考に必要な値を入力
-
-4. **デプロイ**
-   ```bash
-   # 手動デプロイ
-   railway up
-   
-   # 自動デプロイはmainブランチへのpushで実行
-   ```
-
-### Google Cloud Run
-
-```bash
-# Google Cloud SDKのインストールとログイン
-gcloud auth login
-gcloud config set project your-project-id
-
-# コンテナのビルドとデプロイ
-gcloud run deploy choibenassist-ai \
-  --source . \
-  --platform managed \
-  --region asia-northeast1 \
-  --allow-unauthenticated \
-  --set-env-vars GEMINI_API_KEY=your_key,SUPABASE_URL=your_url
-```
-
-### Docker（ローカル確認用）
-
-```bash
-# イメージのビルド
-docker build -t choibenassist-ai .
-
-# コンテナの実行
-docker run -p 8000:8000 --env-file .env choibenassist-ai
-```
-
-### パフォーマンス最適化
-
-#### 本番環境での推奨設定
-
-```bash
-# Gunicornでの起動例
-gunicorn app.main:app \
-  --workers 4 \
-  --worker-class uvicorn.workers.UvicornWorker \
-  --bind 0.0.0.0:8000 \
-  --preload \
-  --max-requests 1000 \
-  --max-requests-jitter 100
-```
+### 5. デプロイ結果
+- アプリケーションは `https://choiben-back.youkan.uk/` に正常にデプロイされました。
+- CORSエラーは環境変数で動的に管理され、解消済み。
 
 ## コントリビューション
 
