@@ -49,37 +49,26 @@ test:
 deploy_production:
   stage: deploy
   image: docker:latest
-  services:
-    - docker:dind
-  variables:
-    DOCKER_HOST: tcp://localhost:2375
-    DOCKER_TLS_VERIFY: ""
-    DOCKER_CERT_PATH: ""
   tags:
     - docker 
   before_script:
     - echo "🐳 Setting up Docker environment..."
+    - echo "🔍 Checking required environment variables..."
+    - test -n "$GEMINI_API_KEY" || (echo "❌ GEMINI_API_KEY is not set!" && exit 1)
+    - test -n "$SUPABASE_URL" || (echo "❌ SUPABASE_URL is not set!" && exit 1)
+    - test -n "$SUPABASE_ANON_KEY" || (echo "❌ SUPABASE_ANON_KEY is not set!" && exit 1)
+    - test -n "$API_SECRET_KEY" || (echo "❌ API_SECRET_KEY is not set!" && exit 1)
+    - echo "✅ All required environment variables are set."
+    - echo "🔧 Initializing Docker..."
+    - docker info || (echo "❌ Docker is not running!" && exit 1)
   script:
     - |
       echo "🐳 Starting Docker build and deploy process..."
       
-      # Build Docker image
-      echo "📦 Building Docker image..."
-      docker build -t $DOCKER_IMAGE_NAME:production .
+      # Build Docker image using Dockerfile
+      echo "📦 Building Docker image using Dockerfile..."
+      docker build -t $DOCKER_IMAGE_NAME:production -f Dockerfile .
       echo "✅ Docker image built successfully"
-      
-      # Create .env file from GitLab CI/CD variables
-      echo "⚙️ Creating environment file from GitLab variables..."
-      cat > .env << 'ENV_EOF'
-      GEMINI_API_KEY=${GEMINI_API_KEY}
-      SUPABASE_URL=${SUPABASE_URL}
-      SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      API_SECRET_KEY=${API_SECRET_KEY}
-      DEBUG=False
-      ENVIRONMENT=production
-      RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE}
-      ENV_EOF
-      echo "✅ Environment file created"
 
       # Stop existing container
       echo "🛑 Stopping existing container..."
