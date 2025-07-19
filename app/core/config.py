@@ -25,6 +25,7 @@ class Settings:
         # Application settings
         self.debug: bool = os.getenv("DEBUG", "True").lower() == "true"
         self.environment: str = os.getenv("ENVIRONMENT", "development")
+        self.enable_docs: bool = os.getenv("ENABLE_DOCS", "True").lower() == "true"
 
         # CORS settings
         origins_env = os.getenv("ALLOWED_ORIGINS", "*")

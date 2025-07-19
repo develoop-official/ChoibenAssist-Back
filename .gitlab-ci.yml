@@ -26,6 +26,7 @@ test:
       ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       DEBUG=True
       ENVIRONMENT=test
+      ENABLE_DOCS=True
       EOF
     - |
       # Dockerでテスト実行
@@ -58,6 +59,7 @@ deploy:
       ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       DEBUG=False
       ENVIRONMENT=production
+      ENABLE_DOCS=True
       EOF
     - |
       # Dockerイメージビルド

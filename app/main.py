@@ -41,8 +41,8 @@ app = FastAPI(
     title="ChoibenAssist AI Backend",
     description="AI microservice for learning plan generation and analysis",
     version="1.0.0",
-    docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None,
+    docs_url="/docs" if settings.enable_docs else None,
+    redoc_url="/redoc" if settings.enable_docs else None,
     lifespan=lifespan,
 )
 
