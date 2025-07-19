@@ -65,7 +65,7 @@ logs/
 *.log
 
 # Test files
-tests/
+# tests/  # コメントアウト - テストで必要
 htmlcov/
 .coverage
 coverage.xml
