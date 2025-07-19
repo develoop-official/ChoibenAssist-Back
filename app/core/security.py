@@ -9,16 +9,18 @@ from app.core.config import settings
 security = HTTPBearer()
 
 
-def verify_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
+def verify_api_key(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> str:
     """
     Verify API key from Authorization header.
-    
+
     Args:
         credentials: HTTP Authorization credentials
-        
+
     Returns:
         str: Verified API key
-        
+
     Raises:
         HTTPException: If API key is invalid
     """
@@ -28,7 +30,7 @@ def verify_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)
             detail="Authorization header is required",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # Check if the provided token matches our API secret key
     if credentials.credentials != settings.api_secret_key:
         raise HTTPException(
@@ -36,17 +38,17 @@ def verify_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)
             detail="Invalid API key",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return credentials.credentials
 
 
 def get_current_api_key(api_key: str = Depends(verify_api_key)) -> str:
     """
     Dependency to get current verified API key.
-    
+
     Args:
         api_key: Verified API key from verify_api_key
-        
+
     Returns:
         str: Current API key
     """
