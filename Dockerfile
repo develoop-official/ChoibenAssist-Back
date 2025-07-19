@@ -1,5 +1,8 @@
 # Multi-stage build for production
-FROM python:3.13.3 as builder
+FROM python:3.13.3 AS builder
+
+# Set PATH to include local bin
+ENV PATH=/root/.local/bin:$PATH
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -10,23 +13,12 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir --user -r requirements.txt \
+    && pip install --no-cache-dir --user -r requirements-dev.txt
 
 # Production stage
 FROM python:3.13.3
-
-# Define build arguments
-ARG GEMINI_API_KEY
-ARG SUPABASE_URL
-ARG SUPABASE_ANON_KEY
-ARG API_SECRET_KEY
-
-# Set environment variables
-ENV GEMINI_API_KEY=$GEMINI_API_KEY
-ENV SUPABASE_URL=$SUPABASE_URL
-ENV SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
-ENV API_SECRET_KEY=$API_SECRET_KEY
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \

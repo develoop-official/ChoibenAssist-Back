@@ -72,7 +72,7 @@ coverage.xml
 
 # Development files
 scripts/
-requirements-dev.txt
+# requirements-dev.txt  # コメントアウト - テストで必要
 pytest.ini
 .flake8
 .isort.cfg
