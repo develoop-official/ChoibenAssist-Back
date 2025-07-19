@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from app.core.config import Settings
+from app.core.security import get_current_api_key
 from app.core.exceptions import (
     GeminiAPIError,
     GeminiConfigurationError,
@@ -161,6 +162,7 @@ def handle_gemini_error(error: Exception) -> HTTPException:
 async def generate_learning_plan(
     request: LearningPlanRequest,
     gemini_service: GeminiService = Depends(get_gemini_service_dep),
+    api_key: str = Depends(get_current_api_key),
 ) -> AIResponse:
     """Generate a personalized learning plan.
 
@@ -202,6 +204,7 @@ async def generate_learning_plan(
 async def generate_todo_list(
     request: TodoRequest,
     gemini_service: GeminiService = Depends(get_gemini_service_dep),
+    api_key: str = Depends(get_current_api_key),
 ) -> AIResponse:
     """Generate today's TODO list.
 
@@ -235,6 +238,7 @@ async def generate_todo_list(
 async def analyze_progress(
     request: AnalysisRequest,
     gemini_service: GeminiService = Depends(get_gemini_service_dep),
+    api_key: str = Depends(get_current_api_key),
 ) -> AIResponse:
     """Analyze learning progress.
 
@@ -270,6 +274,7 @@ async def analyze_progress(
 async def give_advice(
     request: AdviceRequest,
     gemini_service: GeminiService = Depends(get_gemini_service_dep),
+    api_key: str = Depends(get_current_api_key),
 ) -> AIResponse:
     """Provide learning advice.
 
@@ -305,6 +310,7 @@ async def give_advice(
 async def set_goals(
     request: GoalRequest,
     gemini_service: GeminiService = Depends(get_gemini_service_dep),
+    api_key: str = Depends(get_current_api_key),
 ) -> AIResponse:
     """Generate SMART learning goals.
 
@@ -339,6 +345,7 @@ async def generate_scrapbox_todo(
     project_name: str,
     request: ScrapboxTodoRequest,
     gemini_service: GeminiService = Depends(get_gemini_service_dep),
+    api_key: str = Depends(get_current_api_key),
 ) -> AIResponse:
     """
     Scrapbox統合によるTODOリスト生成
@@ -414,6 +421,7 @@ async def get_scrapbox_learning_records(project_name: str) -> dict:
 @router.get("/health", response_model=dict)
 async def health_check(
     gemini_service: GeminiService = Depends(get_gemini_service_dep),
+    api_key: str = Depends(get_current_api_key),
 ) -> dict:
     """Check AI service health.
 
